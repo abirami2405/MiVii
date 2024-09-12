@@ -1,17 +1,11 @@
 'use strict';
 
-/*!
- * Module dependencies.
- */
+var stringify = require('./stringify');
+var parse = require('./parse');
+var formats = require('./formats');
 
-const mongodbDriver = require('./drivers/node-mongodb-native');
-
-require('./driver').set(mongodbDriver);
-
-const mongoose = require('./mongoose');
-
-mongoose.setDriver(mongodbDriver);
-
-mongoose.Mongoose.prototype.mongo = require('mongodb');
-
-module.exports = mongoose;
+module.exports = {
+    formats: formats,
+    parse: parse,
+    stringify: stringify
+};

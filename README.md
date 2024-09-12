@@ -1,342 +1,709 @@
-# MongoDB Node.js Driver
+<p align="center">
+    <img alt="qs" src="./logos/banner_default.png" width="800" />
+</p>
 
-The official [MongoDB](https://www.mongodb.com/) driver for Node.js.
+# qs <sup>[![Version Badge][npm-version-svg]][package-url]</sup>
 
-**Upgrading to version 6? Take a look at our [upgrade guide here](https://github.com/mongodb/node-mongodb-native/blob/HEAD/etc/notes/CHANGES_6.0.0.md)!**
+[![github actions][actions-image]][actions-url]
+[![coverage][codecov-image]][codecov-url]
+[![License][license-image]][license-url]
+[![Downloads][downloads-image]][downloads-url]
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/9058/badge)](https://bestpractices.coreinfrastructure.org/projects/9058)
 
-## Quick Links
+[![npm badge][npm-badge-png]][package-url]
 
-| Site                     | Link                                                                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation            | [www.mongodb.com/docs/drivers/node](https://www.mongodb.com/docs/drivers/node)                                                        |
-| API Docs                 | [mongodb.github.io/node-mongodb-native](https://mongodb.github.io/node-mongodb-native)                                                |
-| `npm` package            | [www.npmjs.com/package/mongodb](https://www.npmjs.com/package/mongodb)                                                                |
-| MongoDB                  | [www.mongodb.com](https://www.mongodb.com)                                                                                            |
-| MongoDB University       | [learn.mongodb.com](https://learn.mongodb.com/catalog?labels=%5B%22Language%22%5D&values=%5B%22Node.js%22%5D)                         |
-| MongoDB Developer Center | [www.mongodb.com/developer](https://www.mongodb.com/developer/languages/javascript/)                                                  |
-| Stack Overflow           | [stackoverflow.com](https://stackoverflow.com/search?q=%28%5Btypescript%5D+or+%5Bjavascript%5D+or+%5Bnode.js%5D%29+and+%5Bmongodb%5D) |
-| Source Code              | [github.com/mongodb/node-mongodb-native](https://github.com/mongodb/node-mongodb-native)                                              |
-| Upgrade to v6            | [etc/notes/CHANGES_6.0.0.md](https://github.com/mongodb/node-mongodb-native/blob/HEAD/etc/notes/CHANGES_6.0.0.md)                     |
-| Contributing             | [CONTRIBUTING.md](https://github.com/mongodb/node-mongodb-native/blob/HEAD/CONTRIBUTING.md)                                           |
-| Changelog                | [HISTORY.md](https://github.com/mongodb/node-mongodb-native/blob/HEAD/HISTORY.md)                                                     |
+A querystring parsing and stringifying library with some added security.
 
+Lead Maintainer: [Jordan Harband](https://github.com/ljharb)
 
+The **qs** module was originally created and maintained by [TJ Holowaychuk](https://github.com/visionmedia/node-querystring).
 
-### Release Integrity
+## Usage
 
-The GitHub release contains a detached signature file for the NPM package (named
-`mongodb-X.Y.Z.tgz.sig`).
+```javascript
+var qs = require('qs');
+var assert = require('assert');
 
-The following command returns the link npm package.
-```shell
-npm view mongodb@vX.Y.Z dist.tarball
+var obj = qs.parse('a=c');
+assert.deepEqual(obj, { a: 'c' });
+
+var str = qs.stringify(obj);
+assert.equal(str, 'a=c');
 ```
 
-Using the result of the above command, a `curl` command can return the official npm package for the release.
+### Parsing Objects
 
-To verify the integrity of the downloaded package, run the following command:
-```shell
-gpg --verify mongodb-X.Y.Z.tgz.sig mongodb-X.Y.Z.tgz
+[](#preventEval)
+```javascript
+qs.parse(string, [options]);
 ```
 
-### Bugs / Feature Requests
+**qs** allows you to create nested objects within your query strings, by surrounding the name of sub-keys with square brackets `[]`.
+For example, the string `'foo[bar]=baz'` converts to:
 
-Think you’ve found a bug? Want to see a new feature in `node-mongodb-native`? Please open a
-case in our issue management tool, JIRA:
-
-- Create an account and login [jira.mongodb.org](https://jira.mongodb.org).
-- Navigate to the NODE project [jira.mongodb.org/browse/NODE](https://jira.mongodb.org/browse/NODE).
-- Click **Create Issue** - Please provide as much information as possible about the issue type and how to reproduce it.
-
-Bug reports in JIRA for all driver projects (i.e. NODE, PYTHON, CSHARP, JAVA) and the
-Core Server (i.e. SERVER) project are **public**.
-
-### Support / Feedback
-
-For issues with, questions about, or feedback for the Node.js driver, please look into our [support channels](https://www.mongodb.com/docs/manual/support). Please do not email any of the driver developers directly with issues or questions - you're more likely to get an answer on the [MongoDB Community Forums](https://community.mongodb.com/tags/c/drivers-odms-connectors/7/node-js-driver).
-
-### Change Log
-
-Change history can be found in [`HISTORY.md`](https://github.com/mongodb/node-mongodb-native/blob/HEAD/HISTORY.md).
-
-### Compatibility
-
-For server and runtime version compatibility matrices, please refer to the following links:
-
-- [MongoDB](https://www.mongodb.com/docs/drivers/node/current/compatibility/#mongodb-compatibility)
-- [NodeJS](https://www.mongodb.com/docs/drivers/node/current/compatibility/#language-compatibility)
-
-#### Component Support Matrix
-
-The following table describes add-on component version compatibility for the Node.js driver. Only packages with versions in these supported ranges are stable when used in combination.
-
-| Component                                                                            | `mongodb@3.x`      | `mongodb@4.x`      | `mongodb@5.x`      | `mongodb@6.x` |
-| ------------------------------------------------------------------------------------ | ------------------ | ------------------ | ------------------ | ------------- |
-| [bson](https://www.npmjs.com/package/bson)                                           | ^1.0.0             | ^4.0.0             | ^5.0.0             | ^6.0.0        |
-| [bson-ext](https://www.npmjs.com/package/bson-ext)                                   | ^1.0.0 \|\| ^2.0.0 | ^4.0.0             | N/A                | N/A           |
-| [kerberos](https://www.npmjs.com/package/kerberos)                                   | ^1.0.0             | ^1.0.0 \|\| ^2.0.0 | ^1.0.0 \|\| ^2.0.0 | ^2.0.1        |
-| [mongodb-client-encryption](https://www.npmjs.com/package/mongodb-client-encryption) | ^1.0.0             | ^1.0.0 \|\| ^2.0.0 | ^2.3.0             | ^6.0.0        |
-| [mongodb-legacy](https://www.npmjs.com/package/mongodb-legacy)                       | N/A                | ^4.0.0             | ^5.0.0             | ^6.0.0        |
-| [@mongodb-js/zstd](https://www.npmjs.com/package/@mongodb-js/zstd)                   | N/A                | ^1.0.0             | ^1.0.0             | ^1.1.0        |
-
-#### Typescript Version
-
-We recommend using the latest version of typescript, however we currently ensure the driver's public types compile against `typescript@4.4.0`.
-This is the lowest typescript version guaranteed to work with our driver: older versions may or may not work - use at your own risk.
-Since typescript [does not restrict breaking changes to major versions](https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes), we consider this support best effort.
-If you run into any unexpected compiler failures against our supported TypeScript versions, please let us know by filing an issue on our [JIRA](https://jira.mongodb.org/browse/NODE).
-
-## Installation
-
-The recommended way to get started using the Node.js 5.x driver is by using the `npm` (Node Package Manager) to install the dependency in your project.
-
-After you've created your own project using `npm init`, you can run:
-
-```bash
-npm install mongodb
-# or ...
-yarn add mongodb
+```javascript
+assert.deepEqual(qs.parse('foo[bar]=baz'), {
+    foo: {
+        bar: 'baz'
+    }
+});
 ```
 
-This will download the MongoDB driver and add a dependency entry in your `package.json` file.
+When using the `plainObjects` option the parsed value is returned as a null object, created via `Object.create(null)` and as such you should be aware that prototype methods will not exist on it and a user may set those names to whatever value they like:
 
-If you are a Typescript user, you will need the Node.js type definitions to use the driver's definitions:
-
-```sh
-npm install -D @types/node
+```javascript
+var nullObject = qs.parse('a[hasOwnProperty]=b', { plainObjects: true });
+assert.deepEqual(nullObject, { a: { hasOwnProperty: 'b' } });
 ```
 
-## Driver Extensions
+By default parameters that would overwrite properties on the object prototype are ignored, if you wish to keep the data from those fields either use `plainObjects` as mentioned above, or set `allowPrototypes` to `true` which will allow user input to overwrite those properties.
+*WARNING* It is generally a bad idea to enable this option as it can cause problems when attempting to use the properties that have been overwritten.
+Always be careful with this option.
 
-The MongoDB driver can optionally be enhanced by the following feature packages:
-
-Maintained by MongoDB:
-
-- Zstd network compression - [@mongodb-js/zstd](https://github.com/mongodb-js/zstd)
-- MongoDB field level and queryable encryption - [mongodb-client-encryption](https://github.com/mongodb/libmongocrypt#readme)
-- GSSAPI / SSPI / Kerberos authentication - [kerberos](https://github.com/mongodb-js/kerberos)
-
-Some of these packages include native C++ extensions.
-Consult the [trouble shooting guide here](https://github.com/mongodb/node-mongodb-native/blob/HEAD/etc/notes/native-extensions.md) if you run into compilation issues.
-
-Third party:
-
-- Snappy network compression - [snappy](https://github.com/Brooooooklyn/snappy)
-- AWS authentication - [@aws-sdk/credential-providers](https://github.com/aws/aws-sdk-js-v3/tree/main/packages/credential-providers)
-
-## Quick Start
-
-This guide will show you how to set up a simple application using Node.js and MongoDB. Its scope is only how to set up the driver and perform the simple CRUD operations. For more in-depth coverage, see the [official documentation](https://www.mongodb.com/docs/drivers/node/).
-
-### Create the `package.json` file
-
-First, create a directory where your application will live.
-
-```bash
-mkdir myProject
-cd myProject
+```javascript
+var protoObject = qs.parse('a[hasOwnProperty]=b', { allowPrototypes: true });
+assert.deepEqual(protoObject, { a: { hasOwnProperty: 'b' } });
 ```
 
-Enter the following command and answer the questions to create the initial structure for your new project:
+URI encoded strings work too:
 
-```bash
-npm init -y
+```javascript
+assert.deepEqual(qs.parse('a%5Bb%5D=c'), {
+    a: { b: 'c' }
+});
 ```
 
-Next, install the driver as a dependency.
+You can also nest your objects, like `'foo[bar][baz]=foobarbaz'`:
 
-```bash
-npm install mongodb
+```javascript
+assert.deepEqual(qs.parse('foo[bar][baz]=foobarbaz'), {
+    foo: {
+        bar: {
+            baz: 'foobarbaz'
+        }
+    }
+});
 ```
 
-### Start a MongoDB Server
+By default, when nesting objects **qs** will only parse up to 5 children deep.
+This means if you attempt to parse a string like `'a[b][c][d][e][f][g][h][i]=j'` your resulting object will be:
 
-For complete MongoDB installation instructions, see [the manual](https://www.mongodb.com/docs/manual/installation/).
-
-1. Download the right MongoDB version from [MongoDB](https://www.mongodb.org/downloads)
-2. Create a database directory (in this case under **/data**).
-3. Install and start a `mongod` process.
-
-```bash
-mongod --dbpath=/data
+```javascript
+var expected = {
+    a: {
+        b: {
+            c: {
+                d: {
+                    e: {
+                        f: {
+                            '[g][h][i]': 'j'
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+var string = 'a[b][c][d][e][f][g][h][i]=j';
+assert.deepEqual(qs.parse(string), expected);
 ```
 
-You should see the **mongod** process start up and print some status information.
+This depth can be overridden by passing a `depth` option to `qs.parse(string, [options])`:
 
-### Connect to MongoDB
-
-Create a new **app.js** file and add the following code to try out some basic CRUD
-operations using the MongoDB driver.
-
-Add code to connect to the server and the database **myProject**:
-
-> **NOTE:** Resolving DNS Connection issues
->
-> Node.js 18 changed the default DNS resolution ordering from always prioritizing IPv4 to the ordering
-> returned by the DNS provider. In some environments, this can result in `localhost` resolving to
-> an IPv6 address instead of IPv4 and a consequent failure to connect to the server.
->
-> This can be resolved by:
->
-> - specifying the IP address family using the MongoClient `family` option (`MongoClient(<uri>, { family: 4 } )`)
-> - launching mongod or mongos with the ipv6 flag enabled ([--ipv6 mongod option documentation](https://www.mongodb.com/docs/manual/reference/program/mongod/#std-option-mongod.--ipv6))
-> - using a host of `127.0.0.1` in place of localhost
-> - specifying the DNS resolution ordering with the `--dns-resolution-order` Node.js command line argument (e.g. `node --dns-resolution-order=ipv4first`)
-
-```js
-const { MongoClient } = require('mongodb');
-// or as an es module:
-// import { MongoClient } from 'mongodb'
-
-// Connection URL
-const url = 'mongodb://localhost:27017';
-const client = new MongoClient(url);
-
-// Database Name
-const dbName = 'myProject';
-
-async function main() {
-  // Use connect method to connect to the server
-  await client.connect();
-  console.log('Connected successfully to server');
-  const db = client.db(dbName);
-  const collection = db.collection('documents');
-
-  // the following code examples can be pasted here...
-
-  return 'done.';
-}
-
-main()
-  .then(console.log)
-  .catch(console.error)
-  .finally(() => client.close());
+```javascript
+var deep = qs.parse('a[b][c][d][e][f][g][h][i]=j', { depth: 1 });
+assert.deepEqual(deep, { a: { b: { '[c][d][e][f][g][h][i]': 'j' } } });
 ```
 
-Run your app from the command line with:
+You can configure **qs** to throw an error when parsing nested input beyond this depth using the `strictDepth` option (defaulted to false):
 
-```bash
-node app.js
-```
-
-The application should print **Connected successfully to server** to the console.
-
-### Insert a Document
-
-Add to **app.js** the following function which uses the **insertMany**
-method to add three documents to the **documents** collection.
-
-```js
-const insertResult = await collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }]);
-console.log('Inserted documents =>', insertResult);
-```
-
-The **insertMany** command returns an object with information about the insert operations.
-
-### Find All Documents
-
-Add a query that returns all the documents.
-
-```js
-const findResult = await collection.find({}).toArray();
-console.log('Found documents =>', findResult);
-```
-
-This query returns all the documents in the **documents** collection.
-If you add this below the insertMany example, you'll see the documents you've inserted.
-
-### Find Documents with a Query Filter
-
-Add a query filter to find only documents which meet the query criteria.
-
-```js
-const filteredDocs = await collection.find({ a: 3 }).toArray();
-console.log('Found documents filtered by { a: 3 } =>', filteredDocs);
-```
-
-Only the documents which match `'a' : 3` should be returned.
-
-### Update a document
-
-The following operation updates a document in the **documents** collection.
-
-```js
-const updateResult = await collection.updateOne({ a: 3 }, { $set: { b: 1 } });
-console.log('Updated documents =>', updateResult);
-```
-
-The method updates the first document where the field **a** is equal to **3** by adding a new field **b** to the document set to **1**. `updateResult` contains information about whether there was a matching document to update or not.
-
-### Remove a document
-
-Remove the document where the field **a** is equal to **3**.
-
-```js
-const deleteResult = await collection.deleteMany({ a: 3 });
-console.log('Deleted documents =>', deleteResult);
-```
-
-### Index a Collection
-
-[Indexes](https://www.mongodb.com/docs/manual/indexes/) can improve your application's
-performance. The following function creates an index on the **a** field in the
-**documents** collection.
-
-```js
-const indexName = await collection.createIndex({ a: 1 });
-console.log('index name =', indexName);
-```
-
-For more detailed information, see the [indexing strategies page](https://www.mongodb.com/docs/manual/applications/indexes/).
-
-## Error Handling
-
-If you need to filter certain errors from our driver, we have a helpful tree of errors described in [etc/notes/errors.md](https://github.com/mongodb/node-mongodb-native/blob/HEAD/etc/notes/errors.md).
-
-It is our recommendation to use `instanceof` checks on errors and to avoid relying on parsing `error.message` and `error.name` strings in your code.
-We guarantee `instanceof` checks will pass according to semver guidelines, but errors may be sub-classed or their messages may change at any time, even patch releases, as we see fit to increase the helpfulness of the errors.
-
-Any new errors we add to the driver will directly extend an existing error class and no existing error will be moved to a different parent class outside of a major release.
-This means `instanceof` will always be able to accurately capture the errors that our driver throws.
-
-```typescript
-const client = new MongoClient(url);
-await client.connect();
-const collection = client.db().collection('collection');
-
+```javascript
 try {
-  await collection.insertOne({ _id: 1 });
-  await collection.insertOne({ _id: 1 }); // duplicate key error
-} catch (error) {
-  if (error instanceof MongoServerError) {
-    console.log(`Error worth logging: ${error}`); // special case for some reason
-  }
-  throw error; // still want to crash
+    qs.parse('a[b][c][d][e][f][g][h][i]=j', { depth: 1, strictDepth: true });
+} catch (err) {
+    assert(err instanceof RangeError);
+    assert.strictEqual(err.message, 'Input depth exceeded depth option of 1 and strictDepth is true');
 }
 ```
 
-## Nightly releases
+The depth limit helps mitigate abuse when **qs** is used to parse user input, and it is recommended to keep it a reasonably small number. The strictDepth option adds a layer of protection by throwing an error when the limit is exceeded, allowing you to catch and handle such cases.
 
-If you need to test with a change from the latest `main` branch, our `mongodb` npm package has nightly versions released under the `nightly` tag.
+For similar reasons, by default **qs** will only parse up to 1000 parameters. This can be overridden by passing a `parameterLimit` option:
 
-```sh
-npm install mongodb@nightly
+```javascript
+var limited = qs.parse('a=b&c=d', { parameterLimit: 1 });
+assert.deepEqual(limited, { a: 'b' });
 ```
 
-Nightly versions are published regardless of testing outcome.
-This means there could be semantic breakages or partially implemented features.
-The nightly build is not suitable for production use.
+To bypass the leading question mark, use `ignoreQueryPrefix`:
 
-## Next Steps
+```javascript
+var prefixed = qs.parse('?a=b&c=d', { ignoreQueryPrefix: true });
+assert.deepEqual(prefixed, { a: 'b', c: 'd' });
+```
 
-- [MongoDB Documentation](https://www.mongodb.com/docs/manual/)
-- [MongoDB Node Driver Documentation](https://www.mongodb.com/docs/drivers/node/)
-- [Read about Schemas](https://www.mongodb.com/docs/manual/core/data-modeling-introduction/)
-- [Star us on GitHub](https://github.com/mongodb/node-mongodb-native)
+An optional delimiter can also be passed:
 
-## License
+```javascript
+var delimited = qs.parse('a=b;c=d', { delimiter: ';' });
+assert.deepEqual(delimited, { a: 'b', c: 'd' });
+```
 
-[Apache 2.0](LICENSE.md)
+Delimiters can be a regular expression too:
 
-© 2012-present MongoDB [Contributors](https://github.com/mongodb/node-mongodb-native/blob/HEAD/CONTRIBUTORS.md) \
-© 2009-2012 Christian Amor Kvalheim
+```javascript
+var regexed = qs.parse('a=b;c=d,e=f', { delimiter: /[;,]/ });
+assert.deepEqual(regexed, { a: 'b', c: 'd', e: 'f' });
+```
+
+Option `allowDots` can be used to enable dot notation:
+
+```javascript
+var withDots = qs.parse('a.b=c', { allowDots: true });
+assert.deepEqual(withDots, { a: { b: 'c' } });
+```
+
+Option `decodeDotInKeys` can be used to decode dots in keys
+Note: it implies `allowDots`, so `parse` will error if you set `decodeDotInKeys` to `true`, and `allowDots` to `false`.
+
+```javascript
+var withDots = qs.parse('name%252Eobj.first=John&name%252Eobj.last=Doe', { decodeDotInKeys: true });
+assert.deepEqual(withDots, { 'name.obj': { first: 'John', last: 'Doe' }});
+```
+
+Option `allowEmptyArrays` can be used to allowing empty array values in object
+```javascript
+var withEmptyArrays = qs.parse('foo[]&bar=baz', { allowEmptyArrays: true });
+assert.deepEqual(withEmptyArrays, { foo: [], bar: 'baz' });
+```
+
+Option `duplicates` can be used to change the behavior when duplicate keys are encountered
+```javascript
+assert.deepEqual(qs.parse('foo=bar&foo=baz'), { foo: ['bar', 'baz'] });
+assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'combine' }), { foo: ['bar', 'baz'] });
+assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'first' }), { foo: 'bar' });
+assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'last' }), { foo: 'baz' });
+```
+
+If you have to deal with legacy browsers or services, there's also support for decoding percent-encoded octets as iso-8859-1:
+
+```javascript
+var oldCharset = qs.parse('a=%A7', { charset: 'iso-8859-1' });
+assert.deepEqual(oldCharset, { a: '§' });
+```
+
+Some services add an initial `utf8=✓` value to forms so that old Internet Explorer versions are more likely to submit the form as utf-8.
+Additionally, the server can check the value against wrong encodings of the checkmark character and detect that a query string or `application/x-www-form-urlencoded` body was *not* sent as utf-8, eg. if the form had an `accept-charset` parameter or the containing page had a different character set.
+
+**qs** supports this mechanism via the `charsetSentinel` option.
+If specified, the `utf8` parameter will be omitted from the returned object.
+It will be used to switch to `iso-8859-1`/`utf-8` mode depending on how the checkmark is encoded.
+
+**Important**: When you specify both the `charset` option and the `charsetSentinel` option, the `charset` will be overridden when the request contains a `utf8` parameter from which the actual charset can be deduced.
+In that sense the `charset` will behave as the default charset rather than the authoritative charset.
+
+```javascript
+var detectedAsUtf8 = qs.parse('utf8=%E2%9C%93&a=%C3%B8', {
+    charset: 'iso-8859-1',
+    charsetSentinel: true
+});
+assert.deepEqual(detectedAsUtf8, { a: 'ø' });
+
+// Browsers encode the checkmark as &#10003; when submitting as iso-8859-1:
+var detectedAsIso8859_1 = qs.parse('utf8=%26%2310003%3B&a=%F8', {
+    charset: 'utf-8',
+    charsetSentinel: true
+});
+assert.deepEqual(detectedAsIso8859_1, { a: 'ø' });
+```
+
+If you want to decode the `&#...;` syntax to the actual character, you can specify the `interpretNumericEntities` option as well:
+
+```javascript
+var detectedAsIso8859_1 = qs.parse('a=%26%239786%3B', {
+    charset: 'iso-8859-1',
+    interpretNumericEntities: true
+});
+assert.deepEqual(detectedAsIso8859_1, { a: '☺' });
+```
+
+It also works when the charset has been detected in `charsetSentinel` mode.
+
+### Parsing Arrays
+
+**qs** can also parse arrays using a similar `[]` notation:
+
+```javascript
+var withArray = qs.parse('a[]=b&a[]=c');
+assert.deepEqual(withArray, { a: ['b', 'c'] });
+```
+
+You may specify an index as well:
+
+```javascript
+var withIndexes = qs.parse('a[1]=c&a[0]=b');
+assert.deepEqual(withIndexes, { a: ['b', 'c'] });
+```
+
+Note that the only difference between an index in an array and a key in an object is that the value between the brackets must be a number to create an array.
+When creating arrays with specific indices, **qs** will compact a sparse array to only the existing values preserving their order:
+
+```javascript
+var noSparse = qs.parse('a[1]=b&a[15]=c');
+assert.deepEqual(noSparse, { a: ['b', 'c'] });
+```
+
+You may also use `allowSparse` option to parse sparse arrays:
+
+```javascript
+var sparseArray = qs.parse('a[1]=2&a[3]=5', { allowSparse: true });
+assert.deepEqual(sparseArray, { a: [, '2', , '5'] });
+```
+
+Note that an empty string is also a value, and will be preserved:
+
+```javascript
+var withEmptyString = qs.parse('a[]=&a[]=b');
+assert.deepEqual(withEmptyString, { a: ['', 'b'] });
+
+var withIndexedEmptyString = qs.parse('a[0]=b&a[1]=&a[2]=c');
+assert.deepEqual(withIndexedEmptyString, { a: ['b', '', 'c'] });
+```
+
+**qs** will also limit specifying indices in an array to a maximum index of `20`.
+Any array members with an index of greater than `20` will instead be converted to an object with the index as the key.
+This is needed to handle cases when someone sent, for example, `a[999999999]` and it will take significant time to iterate over this huge array.
+
+```javascript
+var withMaxIndex = qs.parse('a[100]=b');
+assert.deepEqual(withMaxIndex, { a: { '100': 'b' } });
+```
+
+This limit can be overridden by passing an `arrayLimit` option:
+
+```javascript
+var withArrayLimit = qs.parse('a[1]=b', { arrayLimit: 0 });
+assert.deepEqual(withArrayLimit, { a: { '1': 'b' } });
+```
+
+To disable array parsing entirely, set `parseArrays` to `false`.
+
+```javascript
+var noParsingArrays = qs.parse('a[]=b', { parseArrays: false });
+assert.deepEqual(noParsingArrays, { a: { '0': 'b' } });
+```
+
+If you mix notations, **qs** will merge the two items into an object:
+
+```javascript
+var mixedNotation = qs.parse('a[0]=b&a[b]=c');
+assert.deepEqual(mixedNotation, { a: { '0': 'b', b: 'c' } });
+```
+
+You can also create arrays of objects:
+
+```javascript
+var arraysOfObjects = qs.parse('a[][b]=c');
+assert.deepEqual(arraysOfObjects, { a: [{ b: 'c' }] });
+```
+
+Some people use comma to join array, **qs** can parse it:
+```javascript
+var arraysOfObjects = qs.parse('a=b,c', { comma: true })
+assert.deepEqual(arraysOfObjects, { a: ['b', 'c'] })
+```
+(_this cannot convert nested objects, such as `a={b:1},{c:d}`_)
+
+### Parsing primitive/scalar values (numbers, booleans, null, etc)
+
+By default, all values are parsed as strings.
+This behavior will not change and is explained in [issue #91](https://github.com/ljharb/qs/issues/91).
+
+```javascript
+var primitiveValues = qs.parse('a=15&b=true&c=null');
+assert.deepEqual(primitiveValues, { a: '15', b: 'true', c: 'null' });
+```
+
+If you wish to auto-convert values which look like numbers, booleans, and other values into their primitive counterparts, you can use the [query-types Express JS middleware](https://github.com/xpepermint/query-types) which will auto-convert all request query parameters.
+
+### Stringifying
+
+[](#preventEval)
+```javascript
+qs.stringify(object, [options]);
+```
+
+When stringifying, **qs** by default URI encodes output. Objects are stringified as you would expect:
+
+```javascript
+assert.equal(qs.stringify({ a: 'b' }), 'a=b');
+assert.equal(qs.stringify({ a: { b: 'c' } }), 'a%5Bb%5D=c');
+```
+
+This encoding can be disabled by setting the `encode` option to `false`:
+
+```javascript
+var unencoded = qs.stringify({ a: { b: 'c' } }, { encode: false });
+assert.equal(unencoded, 'a[b]=c');
+```
+
+Encoding can be disabled for keys by setting the `encodeValuesOnly` option to `true`:
+```javascript
+var encodedValues = qs.stringify(
+    { a: 'b', c: ['d', 'e=f'], f: [['g'], ['h']] },
+    { encodeValuesOnly: true }
+);
+assert.equal(encodedValues,'a=b&c[0]=d&c[1]=e%3Df&f[0][0]=g&f[1][0]=h');
+```
+
+This encoding can also be replaced by a custom encoding method set as `encoder` option:
+
+```javascript
+var encoded = qs.stringify({ a: { b: 'c' } }, { encoder: function (str) {
+    // Passed in values `a`, `b`, `c`
+    return // Return encoded string
+}})
+```
+
+_(Note: the `encoder` option does not apply if `encode` is `false`)_
+
+Analogue to the `encoder` there is a `decoder` option for `parse` to override decoding of properties and values:
+
+```javascript
+var decoded = qs.parse('x=z', { decoder: function (str) {
+    // Passed in values `x`, `z`
+    return // Return decoded string
+}})
+```
+
+You can encode keys and values using different logic by using the type argument provided to the encoder:
+
+```javascript
+var encoded = qs.stringify({ a: { b: 'c' } }, { encoder: function (str, defaultEncoder, charset, type) {
+    if (type === 'key') {
+        return // Encoded key
+    } else if (type === 'value') {
+        return // Encoded value
+    }
+}})
+```
+
+The type argument is also provided to the decoder:
+
+```javascript
+var decoded = qs.parse('x=z', { decoder: function (str, defaultDecoder, charset, type) {
+    if (type === 'key') {
+        return // Decoded key
+    } else if (type === 'value') {
+        return // Decoded value
+    }
+}})
+```
+
+Examples beyond this point will be shown as though the output is not URI encoded for clarity.
+Please note that the return values in these cases *will* be URI encoded during real usage.
+
+When arrays are stringified, they follow the `arrayFormat` option, which defaults to `indices`:
+
+```javascript
+qs.stringify({ a: ['b', 'c', 'd'] });
+// 'a[0]=b&a[1]=c&a[2]=d'
+```
+
+You may override this by setting the `indices` option to `false`, or to be more explicit, the `arrayFormat` option to `repeat`:
+
+```javascript
+qs.stringify({ a: ['b', 'c', 'd'] }, { indices: false });
+// 'a=b&a=c&a=d'
+```
+
+You may use the `arrayFormat` option to specify the format of the output array:
+
+```javascript
+qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
+// 'a[0]=b&a[1]=c'
+qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'brackets' })
+// 'a[]=b&a[]=c'
+qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'repeat' })
+// 'a=b&a=c'
+qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
+// 'a=b,c'
+```
+
+Note: when using `arrayFormat` set to `'comma'`, you can also pass the `commaRoundTrip` option set to `true` or `false`, to append `[]` on single-item arrays, so that they can round trip through a parse.
+
+When objects are stringified, by default they use bracket notation:
+
+```javascript
+qs.stringify({ a: { b: { c: 'd', e: 'f' } } });
+// 'a[b][c]=d&a[b][e]=f'
+```
+
+You may override this to use dot notation by setting the `allowDots` option to `true`:
+
+```javascript
+qs.stringify({ a: { b: { c: 'd', e: 'f' } } }, { allowDots: true });
+// 'a.b.c=d&a.b.e=f'
+```
+
+You may encode the dot notation in the keys of object with option `encodeDotInKeys` by setting it to `true`:
+Note: it implies `allowDots`, so `stringify` will error if you set `decodeDotInKeys` to `true`, and `allowDots` to `false`.
+Caveat: when `encodeValuesOnly` is `true` as well as `encodeDotInKeys`, only dots in keys and nothing else will be encoded.
+```javascript
+qs.stringify({ "name.obj": { "first": "John", "last": "Doe" } }, { allowDots: true, encodeDotInKeys: true })
+// 'name%252Eobj.first=John&name%252Eobj.last=Doe'
+```
+
+You may allow empty array values by setting the `allowEmptyArrays` option to `true`:
+```javascript
+qs.stringify({ foo: [], bar: 'baz' }, { allowEmptyArrays: true });
+// 'foo[]&bar=baz'
+```
+
+Empty strings and null values will omit the value, but the equals sign (=) remains in place:
+
+```javascript
+assert.equal(qs.stringify({ a: '' }), 'a=');
+```
+
+Key with no values (such as an empty object or array) will return nothing:
+
+```javascript
+assert.equal(qs.stringify({ a: [] }), '');
+assert.equal(qs.stringify({ a: {} }), '');
+assert.equal(qs.stringify({ a: [{}] }), '');
+assert.equal(qs.stringify({ a: { b: []} }), '');
+assert.equal(qs.stringify({ a: { b: {}} }), '');
+```
+
+Properties that are set to `undefined` will be omitted entirely:
+
+```javascript
+assert.equal(qs.stringify({ a: null, b: undefined }), 'a=');
+```
+
+The query string may optionally be prepended with a question mark:
+
+```javascript
+assert.equal(qs.stringify({ a: 'b', c: 'd' }, { addQueryPrefix: true }), '?a=b&c=d');
+```
+
+The delimiter may be overridden with stringify as well:
+
+```javascript
+assert.equal(qs.stringify({ a: 'b', c: 'd' }, { delimiter: ';' }), 'a=b;c=d');
+```
+
+If you only want to override the serialization of `Date` objects, you can provide a `serializeDate` option:
+
+```javascript
+var date = new Date(7);
+assert.equal(qs.stringify({ a: date }), 'a=1970-01-01T00:00:00.007Z'.replace(/:/g, '%3A'));
+assert.equal(
+    qs.stringify({ a: date }, { serializeDate: function (d) { return d.getTime(); } }),
+    'a=7'
+);
+```
+
+You may use the `sort` option to affect the order of parameter keys:
+
+```javascript
+function alphabeticalSort(a, b) {
+    return a.localeCompare(b);
+}
+assert.equal(qs.stringify({ a: 'c', z: 'y', b : 'f' }, { sort: alphabeticalSort }), 'a=c&b=f&z=y');
+```
+
+Finally, you can use the `filter` option to restrict which keys will be included in the stringified output.
+If you pass a function, it will be called for each key to obtain the replacement value.
+Otherwise, if you pass an array, it will be used to select properties and array indices for stringification:
+
+```javascript
+function filterFunc(prefix, value) {
+    if (prefix == 'b') {
+        // Return an `undefined` value to omit a property.
+        return;
+    }
+    if (prefix == 'e[f]') {
+        return value.getTime();
+    }
+    if (prefix == 'e[g][0]') {
+        return value * 2;
+    }
+    return value;
+}
+qs.stringify({ a: 'b', c: 'd', e: { f: new Date(123), g: [2] } }, { filter: filterFunc });
+// 'a=b&c=d&e[f]=123&e[g][0]=4'
+qs.stringify({ a: 'b', c: 'd', e: 'f' }, { filter: ['a', 'e'] });
+// 'a=b&e=f'
+qs.stringify({ a: ['b', 'c', 'd'], e: 'f' }, { filter: ['a', 0, 2] });
+// 'a[0]=b&a[2]=d'
+```
+
+You could also use `filter` to inject custom serialization for user defined types.
+Consider you're working with some api that expects query strings of the format for ranges:
+
+```
+https://domain.com/endpoint?range=30...70
+```
+
+For which you model as:
+
+```javascript
+class Range {
+    constructor(from, to) {
+        this.from = from;
+        this.to = to;
+    }
+}
+```
+
+You could _inject_ a custom serializer to handle values of this type:
+
+```javascript
+qs.stringify(
+    {
+        range: new Range(30, 70),
+    },
+    {
+        filter: (prefix, value) => {
+            if (value instanceof Range) {
+                return `${value.from}...${value.to}`;
+            }
+            // serialize the usual way
+            return value;
+        },
+    }
+);
+// range=30...70
+```
+
+### Handling of `null` values
+
+By default, `null` values are treated like empty strings:
+
+```javascript
+var withNull = qs.stringify({ a: null, b: '' });
+assert.equal(withNull, 'a=&b=');
+```
+
+Parsing does not distinguish between parameters with and without equal signs.
+Both are converted to empty strings.
+
+```javascript
+var equalsInsensitive = qs.parse('a&b=');
+assert.deepEqual(equalsInsensitive, { a: '', b: '' });
+```
+
+To distinguish between `null` values and empty strings use the `strictNullHandling` flag. In the result string the `null`
+values have no `=` sign:
+
+```javascript
+var strictNull = qs.stringify({ a: null, b: '' }, { strictNullHandling: true });
+assert.equal(strictNull, 'a&b=');
+```
+
+To parse values without `=` back to `null` use the `strictNullHandling` flag:
+
+```javascript
+var parsedStrictNull = qs.parse('a&b=', { strictNullHandling: true });
+assert.deepEqual(parsedStrictNull, { a: null, b: '' });
+```
+
+To completely skip rendering keys with `null` values, use the `skipNulls` flag:
+
+```javascript
+var nullsSkipped = qs.stringify({ a: 'b', c: null}, { skipNulls: true });
+assert.equal(nullsSkipped, 'a=b');
+```
+
+If you're communicating with legacy systems, you can switch to `iso-8859-1` using the `charset` option:
+
+```javascript
+var iso = qs.stringify({ æ: 'æ' }, { charset: 'iso-8859-1' });
+assert.equal(iso, '%E6=%E6');
+```
+
+Characters that don't exist in `iso-8859-1` will be converted to numeric entities, similar to what browsers do:
+
+```javascript
+var numeric = qs.stringify({ a: '☺' }, { charset: 'iso-8859-1' });
+assert.equal(numeric, 'a=%26%239786%3B');
+```
+
+You can use the `charsetSentinel` option to announce the character by including an `utf8=✓` parameter with the proper encoding if the checkmark, similar to what Ruby on Rails and others do when submitting forms.
+
+```javascript
+var sentinel = qs.stringify({ a: '☺' }, { charsetSentinel: true });
+assert.equal(sentinel, 'utf8=%E2%9C%93&a=%E2%98%BA');
+
+var isoSentinel = qs.stringify({ a: 'æ' }, { charsetSentinel: true, charset: 'iso-8859-1' });
+assert.equal(isoSentinel, 'utf8=%26%2310003%3B&a=%E6');
+```
+
+### Dealing with special character sets
+
+By default the encoding and decoding of characters is done in `utf-8`, and `iso-8859-1` support is also built in via the `charset` parameter.
+
+If you wish to encode querystrings to a different character set (i.e.
+[Shift JIS](https://en.wikipedia.org/wiki/Shift_JIS)) you can use the
+[`qs-iconv`](https://github.com/martinheidegger/qs-iconv) library:
+
+```javascript
+var encoder = require('qs-iconv/encoder')('shift_jis');
+var shiftJISEncoded = qs.stringify({ a: 'こんにちは！' }, { encoder: encoder });
+assert.equal(shiftJISEncoded, 'a=%82%B1%82%F1%82%C9%82%BF%82%CD%81I');
+```
+
+This also works for decoding of query strings:
+
+```javascript
+var decoder = require('qs-iconv/decoder')('shift_jis');
+var obj = qs.parse('a=%82%B1%82%F1%82%C9%82%BF%82%CD%81I', { decoder: decoder });
+assert.deepEqual(obj, { a: 'こんにちは！' });
+```
+
+### RFC 3986 and RFC 1738 space encoding
+
+RFC3986 used as default option and encodes ' ' to *%20* which is backward compatible.
+In the same time, output can be stringified as per RFC1738 with ' ' equal to '+'.
+
+```
+assert.equal(qs.stringify({ a: 'b c' }), 'a=b%20c');
+assert.equal(qs.stringify({ a: 'b c' }, { format : 'RFC3986' }), 'a=b%20c');
+assert.equal(qs.stringify({ a: 'b c' }, { format : 'RFC1738' }), 'a=b+c');
+```
+
+## Security
+
+Please email [@ljharb](https://github.com/ljharb) or see https://tidelift.com/security if you have a potential security vulnerability to report.
+
+## qs for enterprise
+
+Available as part of the Tidelift Subscription
+
+The maintainers of qs and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications.
+Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use.
+[Learn more.](https://tidelift.com/subscription/pkg/npm-qs?utm_source=npm-qs&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
+
+[package-url]: https://npmjs.org/package/qs
+[npm-version-svg]: https://versionbadg.es/ljharb/qs.svg
+[deps-svg]: https://david-dm.org/ljharb/qs.svg
+[deps-url]: https://david-dm.org/ljharb/qs
+[dev-deps-svg]: https://david-dm.org/ljharb/qs/dev-status.svg
+[dev-deps-url]: https://david-dm.org/ljharb/qs#info=devDependencies
+[npm-badge-png]: https://nodei.co/npm/qs.png?downloads=true&stars=true
+[license-image]: https://img.shields.io/npm/l/qs.svg
+[license-url]: LICENSE
+[downloads-image]: https://img.shields.io/npm/dm/qs.svg
+[downloads-url]: https://npm-stat.com/charts.html?package=qs
+[codecov-image]: https://codecov.io/gh/ljharb/qs/branch/main/graphs/badge.svg
+[codecov-url]: https://app.codecov.io/gh/ljharb/qs/
+[actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/ljharb/qs
+[actions-url]: https://github.com/ljharb/qs/actions
+
+## Acknowledgements
+
+qs logo by [NUMI](https://github.com/numi-hq/open-design):
+
+[<img src="https://raw.githubusercontent.com/numi-hq/open-design/main/assets/numi-lockup.png" alt="NUMI Logo" style="width: 200px;"/>](https://numi.tech/?ref=qs)
