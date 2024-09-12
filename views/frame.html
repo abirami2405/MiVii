@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Screen Frame</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="myIframe"></iframe>
+
+    <script>
+        // Get the URL parameter from the query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const iframeSrc = urlParams.get('src') || 'https://example.com'; // Default URL if none provided
+
+        document.getElementById('myIframe').src = iframeSrc; // Set the iframe source
+    </script>
+</body>
+
+</html>
