@@ -1,709 +1,584 @@
-<p align="center">
-    <img alt="qs" src="./logos/banner_default.png" width="800" />
-</p>
+# safe-buffer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
 
-# qs <sup>[![Version Badge][npm-version-svg]][package-url]</sup>
+[travis-image]: https://img.shields.io/travis/feross/safe-buffer/master.svg
+[travis-url]: https://travis-ci.org/feross/safe-buffer
+[npm-image]: https://img.shields.io/npm/v/safe-buffer.svg
+[npm-url]: https://npmjs.org/package/safe-buffer
+[downloads-image]: https://img.shields.io/npm/dm/safe-buffer.svg
+[downloads-url]: https://npmjs.org/package/safe-buffer
+[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
+[standard-url]: https://standardjs.com
 
-[![github actions][actions-image]][actions-url]
-[![coverage][codecov-image]][codecov-url]
-[![License][license-image]][license-url]
-[![Downloads][downloads-image]][downloads-url]
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/9058/badge)](https://bestpractices.coreinfrastructure.org/projects/9058)
+#### Safer Node.js Buffer API
 
-[![npm badge][npm-badge-png]][package-url]
+**Use the new Node.js Buffer APIs (`Buffer.from`, `Buffer.alloc`,
+`Buffer.allocUnsafe`, `Buffer.allocUnsafeSlow`) in all versions of Node.js.**
 
-A querystring parsing and stringifying library with some added security.
+**Uses the built-in implementation when available.**
 
-Lead Maintainer: [Jordan Harband](https://github.com/ljharb)
+## install
 
-The **qs** module was originally created and maintained by [TJ Holowaychuk](https://github.com/visionmedia/node-querystring).
-
-## Usage
-
-```javascript
-var qs = require('qs');
-var assert = require('assert');
-
-var obj = qs.parse('a=c');
-assert.deepEqual(obj, { a: 'c' });
-
-var str = qs.stringify(obj);
-assert.equal(str, 'a=c');
+```
+npm install safe-buffer
 ```
 
-### Parsing Objects
+## usage
 
-[](#preventEval)
-```javascript
-qs.parse(string, [options]);
+The goal of this package is to provide a safe replacement for the node.js `Buffer`.
+
+It's a drop-in replacement for `Buffer`. You can use it by adding one `require` line to
+the top of your node.js modules:
+
+```js
+var Buffer = require('safe-buffer').Buffer
+
+// Existing buffer code will continue to work without issues:
+
+new Buffer('hey', 'utf8')
+new Buffer([1, 2, 3], 'utf8')
+new Buffer(obj)
+new Buffer(16) // create an uninitialized buffer (potentially unsafe)
+
+// But you can use these new explicit APIs to make clear what you want:
+
+Buffer.from('hey', 'utf8') // convert from many types to a Buffer
+Buffer.alloc(16) // create a zero-filled buffer (safe)
+Buffer.allocUnsafe(16) // create an uninitialized buffer (potentially unsafe)
 ```
 
-**qs** allows you to create nested objects within your query strings, by surrounding the name of sub-keys with square brackets `[]`.
-For example, the string `'foo[bar]=baz'` converts to:
+## api
 
-```javascript
-assert.deepEqual(qs.parse('foo[bar]=baz'), {
-    foo: {
-        bar: 'baz'
-    }
+### Class Method: Buffer.from(array)
+<!-- YAML
+added: v3.0.0
+-->
+
+* `array` {Array}
+
+Allocates a new `Buffer` using an `array` of octets.
+
+```js
+const buf = Buffer.from([0x62,0x75,0x66,0x66,0x65,0x72]);
+  // creates a new Buffer containing ASCII bytes
+  // ['b','u','f','f','e','r']
+```
+
+A `TypeError` will be thrown if `array` is not an `Array`.
+
+### Class Method: Buffer.from(arrayBuffer[, byteOffset[, length]])
+<!-- YAML
+added: v5.10.0
+-->
+
+* `arrayBuffer` {ArrayBuffer} The `.buffer` property of a `TypedArray` or
+  a `new ArrayBuffer()`
+* `byteOffset` {Number} Default: `0`
+* `length` {Number} Default: `arrayBuffer.length - byteOffset`
+
+When passed a reference to the `.buffer` property of a `TypedArray` instance,
+the newly created `Buffer` will share the same allocated memory as the
+TypedArray.
+
+```js
+const arr = new Uint16Array(2);
+arr[0] = 5000;
+arr[1] = 4000;
+
+const buf = Buffer.from(arr.buffer); // shares the memory with arr;
+
+console.log(buf);
+  // Prints: <Buffer 88 13 a0 0f>
+
+// changing the TypedArray changes the Buffer also
+arr[1] = 6000;
+
+console.log(buf);
+  // Prints: <Buffer 88 13 70 17>
+```
+
+The optional `byteOffset` and `length` arguments specify a memory range within
+the `arrayBuffer` that will be shared by the `Buffer`.
+
+```js
+const ab = new ArrayBuffer(10);
+const buf = Buffer.from(ab, 0, 2);
+console.log(buf.length);
+  // Prints: 2
+```
+
+A `TypeError` will be thrown if `arrayBuffer` is not an `ArrayBuffer`.
+
+### Class Method: Buffer.from(buffer)
+<!-- YAML
+added: v3.0.0
+-->
+
+* `buffer` {Buffer}
+
+Copies the passed `buffer` data onto a new `Buffer` instance.
+
+```js
+const buf1 = Buffer.from('buffer');
+const buf2 = Buffer.from(buf1);
+
+buf1[0] = 0x61;
+console.log(buf1.toString());
+  // 'auffer'
+console.log(buf2.toString());
+  // 'buffer' (copy is not changed)
+```
+
+A `TypeError` will be thrown if `buffer` is not a `Buffer`.
+
+### Class Method: Buffer.from(str[, encoding])
+<!-- YAML
+added: v5.10.0
+-->
+
+* `str` {String} String to encode.
+* `encoding` {String} Encoding to use, Default: `'utf8'`
+
+Creates a new `Buffer` containing the given JavaScript string `str`. If
+provided, the `encoding` parameter identifies the character encoding.
+If not provided, `encoding` defaults to `'utf8'`.
+
+```js
+const buf1 = Buffer.from('this is a tést');
+console.log(buf1.toString());
+  // prints: this is a tést
+console.log(buf1.toString('ascii'));
+  // prints: this is a tC)st
+
+const buf2 = Buffer.from('7468697320697320612074c3a97374', 'hex');
+console.log(buf2.toString());
+  // prints: this is a tést
+```
+
+A `TypeError` will be thrown if `str` is not a string.
+
+### Class Method: Buffer.alloc(size[, fill[, encoding]])
+<!-- YAML
+added: v5.10.0
+-->
+
+* `size` {Number}
+* `fill` {Value} Default: `undefined`
+* `encoding` {String} Default: `utf8`
+
+Allocates a new `Buffer` of `size` bytes. If `fill` is `undefined`, the
+`Buffer` will be *zero-filled*.
+
+```js
+const buf = Buffer.alloc(5);
+console.log(buf);
+  // <Buffer 00 00 00 00 00>
+```
+
+The `size` must be less than or equal to the value of
+`require('buffer').kMaxLength` (on 64-bit architectures, `kMaxLength` is
+`(2^31)-1`). Otherwise, a [`RangeError`][] is thrown. A zero-length Buffer will
+be created if a `size` less than or equal to 0 is specified.
+
+If `fill` is specified, the allocated `Buffer` will be initialized by calling
+`buf.fill(fill)`. See [`buf.fill()`][] for more information.
+
+```js
+const buf = Buffer.alloc(5, 'a');
+console.log(buf);
+  // <Buffer 61 61 61 61 61>
+```
+
+If both `fill` and `encoding` are specified, the allocated `Buffer` will be
+initialized by calling `buf.fill(fill, encoding)`. For example:
+
+```js
+const buf = Buffer.alloc(11, 'aGVsbG8gd29ybGQ=', 'base64');
+console.log(buf);
+  // <Buffer 68 65 6c 6c 6f 20 77 6f 72 6c 64>
+```
+
+Calling `Buffer.alloc(size)` can be significantly slower than the alternative
+`Buffer.allocUnsafe(size)` but ensures that the newly created `Buffer` instance
+contents will *never contain sensitive data*.
+
+A `TypeError` will be thrown if `size` is not a number.
+
+### Class Method: Buffer.allocUnsafe(size)
+<!-- YAML
+added: v5.10.0
+-->
+
+* `size` {Number}
+
+Allocates a new *non-zero-filled* `Buffer` of `size` bytes.  The `size` must
+be less than or equal to the value of `require('buffer').kMaxLength` (on 64-bit
+architectures, `kMaxLength` is `(2^31)-1`). Otherwise, a [`RangeError`][] is
+thrown. A zero-length Buffer will be created if a `size` less than or equal to
+0 is specified.
+
+The underlying memory for `Buffer` instances created in this way is *not
+initialized*. The contents of the newly created `Buffer` are unknown and
+*may contain sensitive data*. Use [`buf.fill(0)`][] to initialize such
+`Buffer` instances to zeroes.
+
+```js
+const buf = Buffer.allocUnsafe(5);
+console.log(buf);
+  // <Buffer 78 e0 82 02 01>
+  // (octets will be different, every time)
+buf.fill(0);
+console.log(buf);
+  // <Buffer 00 00 00 00 00>
+```
+
+A `TypeError` will be thrown if `size` is not a number.
+
+Note that the `Buffer` module pre-allocates an internal `Buffer` instance of
+size `Buffer.poolSize` that is used as a pool for the fast allocation of new
+`Buffer` instances created using `Buffer.allocUnsafe(size)` (and the deprecated
+`new Buffer(size)` constructor) only when `size` is less than or equal to
+`Buffer.poolSize >> 1` (floor of `Buffer.poolSize` divided by two). The default
+value of `Buffer.poolSize` is `8192` but can be modified.
+
+Use of this pre-allocated internal memory pool is a key difference between
+calling `Buffer.alloc(size, fill)` vs. `Buffer.allocUnsafe(size).fill(fill)`.
+Specifically, `Buffer.alloc(size, fill)` will *never* use the internal Buffer
+pool, while `Buffer.allocUnsafe(size).fill(fill)` *will* use the internal
+Buffer pool if `size` is less than or equal to half `Buffer.poolSize`. The
+difference is subtle but can be important when an application requires the
+additional performance that `Buffer.allocUnsafe(size)` provides.
+
+### Class Method: Buffer.allocUnsafeSlow(size)
+<!-- YAML
+added: v5.10.0
+-->
+
+* `size` {Number}
+
+Allocates a new *non-zero-filled* and non-pooled `Buffer` of `size` bytes.  The
+`size` must be less than or equal to the value of
+`require('buffer').kMaxLength` (on 64-bit architectures, `kMaxLength` is
+`(2^31)-1`). Otherwise, a [`RangeError`][] is thrown. A zero-length Buffer will
+be created if a `size` less than or equal to 0 is specified.
+
+The underlying memory for `Buffer` instances created in this way is *not
+initialized*. The contents of the newly created `Buffer` are unknown and
+*may contain sensitive data*. Use [`buf.fill(0)`][] to initialize such
+`Buffer` instances to zeroes.
+
+When using `Buffer.allocUnsafe()` to allocate new `Buffer` instances,
+allocations under 4KB are, by default, sliced from a single pre-allocated
+`Buffer`. This allows applications to avoid the garbage collection overhead of
+creating many individually allocated Buffers. This approach improves both
+performance and memory usage by eliminating the need to track and cleanup as
+many `Persistent` objects.
+
+However, in the case where a developer may need to retain a small chunk of
+memory from a pool for an indeterminate amount of time, it may be appropriate
+to create an un-pooled Buffer instance using `Buffer.allocUnsafeSlow()` then
+copy out the relevant bits.
+
+```js
+// need to keep around a few small chunks of memory
+const store = [];
+
+socket.on('readable', () => {
+  const data = socket.read();
+  // allocate for retained data
+  const sb = Buffer.allocUnsafeSlow(10);
+  // copy the data into the new allocation
+  data.copy(sb, 0, 0, 10);
+  store.push(sb);
 });
 ```
 
-When using the `plainObjects` option the parsed value is returned as a null object, created via `Object.create(null)` and as such you should be aware that prototype methods will not exist on it and a user may set those names to whatever value they like:
+Use of `Buffer.allocUnsafeSlow()` should be used only as a last resort *after*
+a developer has observed undue memory retention in their applications.
 
-```javascript
-var nullObject = qs.parse('a[hasOwnProperty]=b', { plainObjects: true });
-assert.deepEqual(nullObject, { a: { hasOwnProperty: 'b' } });
-```
+A `TypeError` will be thrown if `size` is not a number.
 
-By default parameters that would overwrite properties on the object prototype are ignored, if you wish to keep the data from those fields either use `plainObjects` as mentioned above, or set `allowPrototypes` to `true` which will allow user input to overwrite those properties.
-*WARNING* It is generally a bad idea to enable this option as it can cause problems when attempting to use the properties that have been overwritten.
-Always be careful with this option.
+### All the Rest
 
-```javascript
-var protoObject = qs.parse('a[hasOwnProperty]=b', { allowPrototypes: true });
-assert.deepEqual(protoObject, { a: { hasOwnProperty: 'b' } });
-```
+The rest of the `Buffer` API is exactly the same as in node.js.
+[See the docs](https://nodejs.org/api/buffer.html).
 
-URI encoded strings work too:
 
-```javascript
-assert.deepEqual(qs.parse('a%5Bb%5D=c'), {
-    a: { b: 'c' }
-});
-```
+## Related links
 
-You can also nest your objects, like `'foo[bar][baz]=foobarbaz'`:
+- [Node.js issue: Buffer(number) is unsafe](https://github.com/nodejs/node/issues/4660)
+- [Node.js Enhancement Proposal: Buffer.from/Buffer.alloc/Buffer.zalloc/Buffer() soft-deprecate](https://github.com/nodejs/node-eps/pull/4)
 
-```javascript
-assert.deepEqual(qs.parse('foo[bar][baz]=foobarbaz'), {
-    foo: {
-        bar: {
-            baz: 'foobarbaz'
-        }
-    }
-});
-```
+## Why is `Buffer` unsafe?
 
-By default, when nesting objects **qs** will only parse up to 5 children deep.
-This means if you attempt to parse a string like `'a[b][c][d][e][f][g][h][i]=j'` your resulting object will be:
+Today, the node.js `Buffer` constructor is overloaded to handle many different argument
+types like `String`, `Array`, `Object`, `TypedArrayView` (`Uint8Array`, etc.),
+`ArrayBuffer`, and also `Number`.
 
-```javascript
-var expected = {
-    a: {
-        b: {
-            c: {
-                d: {
-                    e: {
-                        f: {
-                            '[g][h][i]': 'j'
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
-var string = 'a[b][c][d][e][f][g][h][i]=j';
-assert.deepEqual(qs.parse(string), expected);
-```
+The API is optimized for convenience: you can throw any type at it, and it will try to do
+what you want.
 
-This depth can be overridden by passing a `depth` option to `qs.parse(string, [options])`:
+Because the Buffer constructor is so powerful, you often see code like this:
 
-```javascript
-var deep = qs.parse('a[b][c][d][e][f][g][h][i]=j', { depth: 1 });
-assert.deepEqual(deep, { a: { b: { '[c][d][e][f][g][h][i]': 'j' } } });
-```
-
-You can configure **qs** to throw an error when parsing nested input beyond this depth using the `strictDepth` option (defaulted to false):
-
-```javascript
-try {
-    qs.parse('a[b][c][d][e][f][g][h][i]=j', { depth: 1, strictDepth: true });
-} catch (err) {
-    assert(err instanceof RangeError);
-    assert.strictEqual(err.message, 'Input depth exceeded depth option of 1 and strictDepth is true');
+```js
+// Convert UTF-8 strings to hex
+function toHex (str) {
+  return new Buffer(str).toString('hex')
 }
 ```
 
-The depth limit helps mitigate abuse when **qs** is used to parse user input, and it is recommended to keep it a reasonably small number. The strictDepth option adds a layer of protection by throwing an error when the limit is exceeded, allowing you to catch and handle such cases.
+***But what happens if `toHex` is called with a `Number` argument?***
 
-For similar reasons, by default **qs** will only parse up to 1000 parameters. This can be overridden by passing a `parameterLimit` option:
+### Remote Memory Disclosure
 
-```javascript
-var limited = qs.parse('a=b&c=d', { parameterLimit: 1 });
-assert.deepEqual(limited, { a: 'b' });
-```
+If an attacker can make your program call the `Buffer` constructor with a `Number`
+argument, then they can make it allocate uninitialized memory from the node.js process.
+This could potentially disclose TLS private keys, user data, or database passwords.
 
-To bypass the leading question mark, use `ignoreQueryPrefix`:
+When the `Buffer` constructor is passed a `Number` argument, it returns an
+**UNINITIALIZED** block of memory of the specified `size`. When you create a `Buffer` like
+this, you **MUST** overwrite the contents before returning it to the user.
 
-```javascript
-var prefixed = qs.parse('?a=b&c=d', { ignoreQueryPrefix: true });
-assert.deepEqual(prefixed, { a: 'b', c: 'd' });
-```
+From the [node.js docs](https://nodejs.org/api/buffer.html#buffer_new_buffer_size):
 
-An optional delimiter can also be passed:
+> `new Buffer(size)`
+>
+> - `size` Number
+>
+> The underlying memory for `Buffer` instances created in this way is not initialized.
+> **The contents of a newly created `Buffer` are unknown and could contain sensitive
+> data.** Use `buf.fill(0)` to initialize a Buffer to zeroes.
 
-```javascript
-var delimited = qs.parse('a=b;c=d', { delimiter: ';' });
-assert.deepEqual(delimited, { a: 'b', c: 'd' });
-```
+(Emphasis our own.)
 
-Delimiters can be a regular expression too:
+Whenever the programmer intended to create an uninitialized `Buffer` you often see code
+like this:
 
-```javascript
-var regexed = qs.parse('a=b;c=d,e=f', { delimiter: /[;,]/ });
-assert.deepEqual(regexed, { a: 'b', c: 'd', e: 'f' });
-```
+```js
+var buf = new Buffer(16)
 
-Option `allowDots` can be used to enable dot notation:
-
-```javascript
-var withDots = qs.parse('a.b=c', { allowDots: true });
-assert.deepEqual(withDots, { a: { b: 'c' } });
-```
-
-Option `decodeDotInKeys` can be used to decode dots in keys
-Note: it implies `allowDots`, so `parse` will error if you set `decodeDotInKeys` to `true`, and `allowDots` to `false`.
-
-```javascript
-var withDots = qs.parse('name%252Eobj.first=John&name%252Eobj.last=Doe', { decodeDotInKeys: true });
-assert.deepEqual(withDots, { 'name.obj': { first: 'John', last: 'Doe' }});
-```
-
-Option `allowEmptyArrays` can be used to allowing empty array values in object
-```javascript
-var withEmptyArrays = qs.parse('foo[]&bar=baz', { allowEmptyArrays: true });
-assert.deepEqual(withEmptyArrays, { foo: [], bar: 'baz' });
-```
-
-Option `duplicates` can be used to change the behavior when duplicate keys are encountered
-```javascript
-assert.deepEqual(qs.parse('foo=bar&foo=baz'), { foo: ['bar', 'baz'] });
-assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'combine' }), { foo: ['bar', 'baz'] });
-assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'first' }), { foo: 'bar' });
-assert.deepEqual(qs.parse('foo=bar&foo=baz', { duplicates: 'last' }), { foo: 'baz' });
-```
-
-If you have to deal with legacy browsers or services, there's also support for decoding percent-encoded octets as iso-8859-1:
-
-```javascript
-var oldCharset = qs.parse('a=%A7', { charset: 'iso-8859-1' });
-assert.deepEqual(oldCharset, { a: '§' });
-```
-
-Some services add an initial `utf8=✓` value to forms so that old Internet Explorer versions are more likely to submit the form as utf-8.
-Additionally, the server can check the value against wrong encodings of the checkmark character and detect that a query string or `application/x-www-form-urlencoded` body was *not* sent as utf-8, eg. if the form had an `accept-charset` parameter or the containing page had a different character set.
-
-**qs** supports this mechanism via the `charsetSentinel` option.
-If specified, the `utf8` parameter will be omitted from the returned object.
-It will be used to switch to `iso-8859-1`/`utf-8` mode depending on how the checkmark is encoded.
-
-**Important**: When you specify both the `charset` option and the `charsetSentinel` option, the `charset` will be overridden when the request contains a `utf8` parameter from which the actual charset can be deduced.
-In that sense the `charset` will behave as the default charset rather than the authoritative charset.
-
-```javascript
-var detectedAsUtf8 = qs.parse('utf8=%E2%9C%93&a=%C3%B8', {
-    charset: 'iso-8859-1',
-    charsetSentinel: true
-});
-assert.deepEqual(detectedAsUtf8, { a: 'ø' });
-
-// Browsers encode the checkmark as &#10003; when submitting as iso-8859-1:
-var detectedAsIso8859_1 = qs.parse('utf8=%26%2310003%3B&a=%F8', {
-    charset: 'utf-8',
-    charsetSentinel: true
-});
-assert.deepEqual(detectedAsIso8859_1, { a: 'ø' });
-```
-
-If you want to decode the `&#...;` syntax to the actual character, you can specify the `interpretNumericEntities` option as well:
-
-```javascript
-var detectedAsIso8859_1 = qs.parse('a=%26%239786%3B', {
-    charset: 'iso-8859-1',
-    interpretNumericEntities: true
-});
-assert.deepEqual(detectedAsIso8859_1, { a: '☺' });
-```
-
-It also works when the charset has been detected in `charsetSentinel` mode.
-
-### Parsing Arrays
-
-**qs** can also parse arrays using a similar `[]` notation:
-
-```javascript
-var withArray = qs.parse('a[]=b&a[]=c');
-assert.deepEqual(withArray, { a: ['b', 'c'] });
-```
-
-You may specify an index as well:
-
-```javascript
-var withIndexes = qs.parse('a[1]=c&a[0]=b');
-assert.deepEqual(withIndexes, { a: ['b', 'c'] });
-```
-
-Note that the only difference between an index in an array and a key in an object is that the value between the brackets must be a number to create an array.
-When creating arrays with specific indices, **qs** will compact a sparse array to only the existing values preserving their order:
-
-```javascript
-var noSparse = qs.parse('a[1]=b&a[15]=c');
-assert.deepEqual(noSparse, { a: ['b', 'c'] });
-```
-
-You may also use `allowSparse` option to parse sparse arrays:
-
-```javascript
-var sparseArray = qs.parse('a[1]=2&a[3]=5', { allowSparse: true });
-assert.deepEqual(sparseArray, { a: [, '2', , '5'] });
-```
-
-Note that an empty string is also a value, and will be preserved:
-
-```javascript
-var withEmptyString = qs.parse('a[]=&a[]=b');
-assert.deepEqual(withEmptyString, { a: ['', 'b'] });
-
-var withIndexedEmptyString = qs.parse('a[0]=b&a[1]=&a[2]=c');
-assert.deepEqual(withIndexedEmptyString, { a: ['b', '', 'c'] });
-```
-
-**qs** will also limit specifying indices in an array to a maximum index of `20`.
-Any array members with an index of greater than `20` will instead be converted to an object with the index as the key.
-This is needed to handle cases when someone sent, for example, `a[999999999]` and it will take significant time to iterate over this huge array.
-
-```javascript
-var withMaxIndex = qs.parse('a[100]=b');
-assert.deepEqual(withMaxIndex, { a: { '100': 'b' } });
-```
-
-This limit can be overridden by passing an `arrayLimit` option:
-
-```javascript
-var withArrayLimit = qs.parse('a[1]=b', { arrayLimit: 0 });
-assert.deepEqual(withArrayLimit, { a: { '1': 'b' } });
-```
-
-To disable array parsing entirely, set `parseArrays` to `false`.
-
-```javascript
-var noParsingArrays = qs.parse('a[]=b', { parseArrays: false });
-assert.deepEqual(noParsingArrays, { a: { '0': 'b' } });
-```
-
-If you mix notations, **qs** will merge the two items into an object:
-
-```javascript
-var mixedNotation = qs.parse('a[0]=b&a[b]=c');
-assert.deepEqual(mixedNotation, { a: { '0': 'b', b: 'c' } });
-```
-
-You can also create arrays of objects:
-
-```javascript
-var arraysOfObjects = qs.parse('a[][b]=c');
-assert.deepEqual(arraysOfObjects, { a: [{ b: 'c' }] });
-```
-
-Some people use comma to join array, **qs** can parse it:
-```javascript
-var arraysOfObjects = qs.parse('a=b,c', { comma: true })
-assert.deepEqual(arraysOfObjects, { a: ['b', 'c'] })
-```
-(_this cannot convert nested objects, such as `a={b:1},{c:d}`_)
-
-### Parsing primitive/scalar values (numbers, booleans, null, etc)
-
-By default, all values are parsed as strings.
-This behavior will not change and is explained in [issue #91](https://github.com/ljharb/qs/issues/91).
-
-```javascript
-var primitiveValues = qs.parse('a=15&b=true&c=null');
-assert.deepEqual(primitiveValues, { a: '15', b: 'true', c: 'null' });
-```
-
-If you wish to auto-convert values which look like numbers, booleans, and other values into their primitive counterparts, you can use the [query-types Express JS middleware](https://github.com/xpepermint/query-types) which will auto-convert all request query parameters.
-
-### Stringifying
-
-[](#preventEval)
-```javascript
-qs.stringify(object, [options]);
-```
-
-When stringifying, **qs** by default URI encodes output. Objects are stringified as you would expect:
-
-```javascript
-assert.equal(qs.stringify({ a: 'b' }), 'a=b');
-assert.equal(qs.stringify({ a: { b: 'c' } }), 'a%5Bb%5D=c');
-```
-
-This encoding can be disabled by setting the `encode` option to `false`:
-
-```javascript
-var unencoded = qs.stringify({ a: { b: 'c' } }, { encode: false });
-assert.equal(unencoded, 'a[b]=c');
-```
-
-Encoding can be disabled for keys by setting the `encodeValuesOnly` option to `true`:
-```javascript
-var encodedValues = qs.stringify(
-    { a: 'b', c: ['d', 'e=f'], f: [['g'], ['h']] },
-    { encodeValuesOnly: true }
-);
-assert.equal(encodedValues,'a=b&c[0]=d&c[1]=e%3Df&f[0][0]=g&f[1][0]=h');
-```
-
-This encoding can also be replaced by a custom encoding method set as `encoder` option:
-
-```javascript
-var encoded = qs.stringify({ a: { b: 'c' } }, { encoder: function (str) {
-    // Passed in values `a`, `b`, `c`
-    return // Return encoded string
-}})
-```
-
-_(Note: the `encoder` option does not apply if `encode` is `false`)_
-
-Analogue to the `encoder` there is a `decoder` option for `parse` to override decoding of properties and values:
-
-```javascript
-var decoded = qs.parse('x=z', { decoder: function (str) {
-    // Passed in values `x`, `z`
-    return // Return decoded string
-}})
-```
-
-You can encode keys and values using different logic by using the type argument provided to the encoder:
-
-```javascript
-var encoded = qs.stringify({ a: { b: 'c' } }, { encoder: function (str, defaultEncoder, charset, type) {
-    if (type === 'key') {
-        return // Encoded key
-    } else if (type === 'value') {
-        return // Encoded value
-    }
-}})
-```
-
-The type argument is also provided to the decoder:
-
-```javascript
-var decoded = qs.parse('x=z', { decoder: function (str, defaultDecoder, charset, type) {
-    if (type === 'key') {
-        return // Decoded key
-    } else if (type === 'value') {
-        return // Decoded value
-    }
-}})
-```
-
-Examples beyond this point will be shown as though the output is not URI encoded for clarity.
-Please note that the return values in these cases *will* be URI encoded during real usage.
-
-When arrays are stringified, they follow the `arrayFormat` option, which defaults to `indices`:
-
-```javascript
-qs.stringify({ a: ['b', 'c', 'd'] });
-// 'a[0]=b&a[1]=c&a[2]=d'
-```
-
-You may override this by setting the `indices` option to `false`, or to be more explicit, the `arrayFormat` option to `repeat`:
-
-```javascript
-qs.stringify({ a: ['b', 'c', 'd'] }, { indices: false });
-// 'a=b&a=c&a=d'
-```
-
-You may use the `arrayFormat` option to specify the format of the output array:
-
-```javascript
-qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
-// 'a[0]=b&a[1]=c'
-qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'brackets' })
-// 'a[]=b&a[]=c'
-qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'repeat' })
-// 'a=b&a=c'
-qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
-// 'a=b,c'
-```
-
-Note: when using `arrayFormat` set to `'comma'`, you can also pass the `commaRoundTrip` option set to `true` or `false`, to append `[]` on single-item arrays, so that they can round trip through a parse.
-
-When objects are stringified, by default they use bracket notation:
-
-```javascript
-qs.stringify({ a: { b: { c: 'd', e: 'f' } } });
-// 'a[b][c]=d&a[b][e]=f'
-```
-
-You may override this to use dot notation by setting the `allowDots` option to `true`:
-
-```javascript
-qs.stringify({ a: { b: { c: 'd', e: 'f' } } }, { allowDots: true });
-// 'a.b.c=d&a.b.e=f'
-```
-
-You may encode the dot notation in the keys of object with option `encodeDotInKeys` by setting it to `true`:
-Note: it implies `allowDots`, so `stringify` will error if you set `decodeDotInKeys` to `true`, and `allowDots` to `false`.
-Caveat: when `encodeValuesOnly` is `true` as well as `encodeDotInKeys`, only dots in keys and nothing else will be encoded.
-```javascript
-qs.stringify({ "name.obj": { "first": "John", "last": "Doe" } }, { allowDots: true, encodeDotInKeys: true })
-// 'name%252Eobj.first=John&name%252Eobj.last=Doe'
-```
-
-You may allow empty array values by setting the `allowEmptyArrays` option to `true`:
-```javascript
-qs.stringify({ foo: [], bar: 'baz' }, { allowEmptyArrays: true });
-// 'foo[]&bar=baz'
-```
-
-Empty strings and null values will omit the value, but the equals sign (=) remains in place:
-
-```javascript
-assert.equal(qs.stringify({ a: '' }), 'a=');
-```
-
-Key with no values (such as an empty object or array) will return nothing:
-
-```javascript
-assert.equal(qs.stringify({ a: [] }), '');
-assert.equal(qs.stringify({ a: {} }), '');
-assert.equal(qs.stringify({ a: [{}] }), '');
-assert.equal(qs.stringify({ a: { b: []} }), '');
-assert.equal(qs.stringify({ a: { b: {}} }), '');
-```
-
-Properties that are set to `undefined` will be omitted entirely:
-
-```javascript
-assert.equal(qs.stringify({ a: null, b: undefined }), 'a=');
-```
-
-The query string may optionally be prepended with a question mark:
-
-```javascript
-assert.equal(qs.stringify({ a: 'b', c: 'd' }, { addQueryPrefix: true }), '?a=b&c=d');
-```
-
-The delimiter may be overridden with stringify as well:
-
-```javascript
-assert.equal(qs.stringify({ a: 'b', c: 'd' }, { delimiter: ';' }), 'a=b;c=d');
-```
-
-If you only want to override the serialization of `Date` objects, you can provide a `serializeDate` option:
-
-```javascript
-var date = new Date(7);
-assert.equal(qs.stringify({ a: date }), 'a=1970-01-01T00:00:00.007Z'.replace(/:/g, '%3A'));
-assert.equal(
-    qs.stringify({ a: date }, { serializeDate: function (d) { return d.getTime(); } }),
-    'a=7'
-);
-```
-
-You may use the `sort` option to affect the order of parameter keys:
-
-```javascript
-function alphabeticalSort(a, b) {
-    return a.localeCompare(b);
-}
-assert.equal(qs.stringify({ a: 'c', z: 'y', b : 'f' }, { sort: alphabeticalSort }), 'a=c&b=f&z=y');
-```
-
-Finally, you can use the `filter` option to restrict which keys will be included in the stringified output.
-If you pass a function, it will be called for each key to obtain the replacement value.
-Otherwise, if you pass an array, it will be used to select properties and array indices for stringification:
-
-```javascript
-function filterFunc(prefix, value) {
-    if (prefix == 'b') {
-        // Return an `undefined` value to omit a property.
-        return;
-    }
-    if (prefix == 'e[f]') {
-        return value.getTime();
-    }
-    if (prefix == 'e[g][0]') {
-        return value * 2;
-    }
-    return value;
-}
-qs.stringify({ a: 'b', c: 'd', e: { f: new Date(123), g: [2] } }, { filter: filterFunc });
-// 'a=b&c=d&e[f]=123&e[g][0]=4'
-qs.stringify({ a: 'b', c: 'd', e: 'f' }, { filter: ['a', 'e'] });
-// 'a=b&e=f'
-qs.stringify({ a: ['b', 'c', 'd'], e: 'f' }, { filter: ['a', 0, 2] });
-// 'a[0]=b&a[2]=d'
-```
-
-You could also use `filter` to inject custom serialization for user defined types.
-Consider you're working with some api that expects query strings of the format for ranges:
-
-```
-https://domain.com/endpoint?range=30...70
-```
-
-For which you model as:
-
-```javascript
-class Range {
-    constructor(from, to) {
-        this.from = from;
-        this.to = to;
-    }
+// Immediately overwrite the uninitialized buffer with data from another buffer
+for (var i = 0; i < buf.length; i++) {
+  buf[i] = otherBuf[i]
 }
 ```
 
-You could _inject_ a custom serializer to handle values of this type:
 
-```javascript
-qs.stringify(
-    {
-        range: new Range(30, 70),
-    },
-    {
-        filter: (prefix, value) => {
-            if (value instanceof Range) {
-                return `${value.from}...${value.to}`;
-            }
-            // serialize the usual way
-            return value;
-        },
+### Would this ever be a problem in real code?
+
+Yes. It's surprisingly common to forget to check the type of your variables in a
+dynamically-typed language like JavaScript.
+
+Usually the consequences of assuming the wrong type is that your program crashes with an
+uncaught exception. But the failure mode for forgetting to check the type of arguments to
+the `Buffer` constructor is more catastrophic.
+
+Here's an example of a vulnerable service that takes a JSON payload and converts it to
+hex:
+
+```js
+// Take a JSON payload {str: "some string"} and convert it to hex
+var server = http.createServer(function (req, res) {
+  var data = ''
+  req.setEncoding('utf8')
+  req.on('data', function (chunk) {
+    data += chunk
+  })
+  req.on('end', function () {
+    var body = JSON.parse(data)
+    res.end(new Buffer(body.str).toString('hex'))
+  })
+})
+
+server.listen(8080)
+```
+
+In this example, an http client just has to send:
+
+```json
+{
+  "str": 1000
+}
+```
+
+and it will get back 1,000 bytes of uninitialized memory from the server.
+
+This is a very serious bug. It's similar in severity to the
+[the Heartbleed bug](http://heartbleed.com/) that allowed disclosure of OpenSSL process
+memory by remote attackers.
+
+
+### Which real-world packages were vulnerable?
+
+#### [`bittorrent-dht`](https://www.npmjs.com/package/bittorrent-dht)
+
+[Mathias Buus](https://github.com/mafintosh) and I
+([Feross Aboukhadijeh](http://feross.org/)) found this issue in one of our own packages,
+[`bittorrent-dht`](https://www.npmjs.com/package/bittorrent-dht). The bug would allow
+anyone on the internet to send a series of messages to a user of `bittorrent-dht` and get
+them to reveal 20 bytes at a time of uninitialized memory from the node.js process.
+
+Here's
+[the commit](https://github.com/feross/bittorrent-dht/commit/6c7da04025d5633699800a99ec3fbadf70ad35b8)
+that fixed it. We released a new fixed version, created a
+[Node Security Project disclosure](https://nodesecurity.io/advisories/68), and deprecated all
+vulnerable versions on npm so users will get a warning to upgrade to a newer version.
+
+#### [`ws`](https://www.npmjs.com/package/ws)
+
+That got us wondering if there were other vulnerable packages. Sure enough, within a short
+period of time, we found the same issue in [`ws`](https://www.npmjs.com/package/ws), the
+most popular WebSocket implementation in node.js.
+
+If certain APIs were called with `Number` parameters instead of `String` or `Buffer` as
+expected, then uninitialized server memory would be disclosed to the remote peer.
+
+These were the vulnerable methods:
+
+```js
+socket.send(number)
+socket.ping(number)
+socket.pong(number)
+```
+
+Here's a vulnerable socket server with some echo functionality:
+
+```js
+server.on('connection', function (socket) {
+  socket.on('message', function (message) {
+    message = JSON.parse(message)
+    if (message.type === 'echo') {
+      socket.send(message.data) // send back the user's message
     }
-);
-// range=30...70
+  })
+})
 ```
 
-### Handling of `null` values
+`socket.send(number)` called on the server, will disclose server memory.
 
-By default, `null` values are treated like empty strings:
+Here's [the release](https://github.com/websockets/ws/releases/tag/1.0.1) where the issue
+was fixed, with a more detailed explanation. Props to
+[Arnout Kazemier](https://github.com/3rd-Eden) for the quick fix. Here's the
+[Node Security Project disclosure](https://nodesecurity.io/advisories/67).
 
-```javascript
-var withNull = qs.stringify({ a: null, b: '' });
-assert.equal(withNull, 'a=&b=');
+
+### What's the solution?
+
+It's important that node.js offers a fast way to get memory otherwise performance-critical
+applications would needlessly get a lot slower.
+
+But we need a better way to *signal our intent* as programmers. **When we want
+uninitialized memory, we should request it explicitly.**
+
+Sensitive functionality should not be packed into a developer-friendly API that loosely
+accepts many different types. This type of API encourages the lazy practice of passing
+variables in without checking the type very carefully.
+
+#### A new API: `Buffer.allocUnsafe(number)`
+
+The functionality of creating buffers with uninitialized memory should be part of another
+API. We propose `Buffer.allocUnsafe(number)`. This way, it's not part of an API that
+frequently gets user input of all sorts of different types passed into it.
+
+```js
+var buf = Buffer.allocUnsafe(16) // careful, uninitialized memory!
+
+// Immediately overwrite the uninitialized buffer with data from another buffer
+for (var i = 0; i < buf.length; i++) {
+  buf[i] = otherBuf[i]
+}
 ```
 
-Parsing does not distinguish between parameters with and without equal signs.
-Both are converted to empty strings.
 
-```javascript
-var equalsInsensitive = qs.parse('a&b=');
-assert.deepEqual(equalsInsensitive, { a: '', b: '' });
+### How do we fix node.js core?
+
+We sent [a PR to node.js core](https://github.com/nodejs/node/pull/4514) (merged as
+`semver-major`) which defends against one case:
+
+```js
+var str = 16
+new Buffer(str, 'utf8')
 ```
 
-To distinguish between `null` values and empty strings use the `strictNullHandling` flag. In the result string the `null`
-values have no `=` sign:
+In this situation, it's implied that the programmer intended the first argument to be a
+string, since they passed an encoding as a second argument. Today, node.js will allocate
+uninitialized memory in the case of `new Buffer(number, encoding)`, which is probably not
+what the programmer intended.
 
-```javascript
-var strictNull = qs.stringify({ a: null, b: '' }, { strictNullHandling: true });
-assert.equal(strictNull, 'a&b=');
+But this is only a partial solution, since if the programmer does `new Buffer(variable)`
+(without an `encoding` parameter) there's no way to know what they intended. If `variable`
+is sometimes a number, then uninitialized memory will sometimes be returned.
+
+### What's the real long-term fix?
+
+We could deprecate and remove `new Buffer(number)` and use `Buffer.allocUnsafe(number)` when
+we need uninitialized memory. But that would break 1000s of packages.
+
+~~We believe the best solution is to:~~
+
+~~1. Change `new Buffer(number)` to return safe, zeroed-out memory~~
+
+~~2. Create a new API for creating uninitialized Buffers. We propose: `Buffer.allocUnsafe(number)`~~
+
+#### Update
+
+We now support adding three new APIs:
+
+- `Buffer.from(value)` - convert from any type to a buffer
+- `Buffer.alloc(size)` - create a zero-filled buffer
+- `Buffer.allocUnsafe(size)` - create an uninitialized buffer with given size
+
+This solves the core problem that affected `ws` and `bittorrent-dht` which is
+`Buffer(variable)` getting tricked into taking a number argument.
+
+This way, existing code continues working and the impact on the npm ecosystem will be
+minimal. Over time, npm maintainers can migrate performance-critical code to use
+`Buffer.allocUnsafe(number)` instead of `new Buffer(number)`.
+
+
+### Conclusion
+
+We think there's a serious design issue with the `Buffer` API as it exists today. It
+promotes insecure software by putting high-risk functionality into a convenient API
+with friendly "developer ergonomics".
+
+This wasn't merely a theoretical exercise because we found the issue in some of the
+most popular npm packages.
+
+Fortunately, there's an easy fix that can be applied today. Use `safe-buffer` in place of
+`buffer`.
+
+```js
+var Buffer = require('safe-buffer').Buffer
 ```
 
-To parse values without `=` back to `null` use the `strictNullHandling` flag:
+Eventually, we hope that node.js core can switch to this new, safer behavior. We believe
+the impact on the ecosystem would be minimal since it's not a breaking change.
+Well-maintained, popular packages would be updated to use `Buffer.alloc` quickly, while
+older, insecure packages would magically become safe from this attack vector.
 
-```javascript
-var parsedStrictNull = qs.parse('a&b=', { strictNullHandling: true });
-assert.deepEqual(parsedStrictNull, { a: null, b: '' });
-```
 
-To completely skip rendering keys with `null` values, use the `skipNulls` flag:
+## links
 
-```javascript
-var nullsSkipped = qs.stringify({ a: 'b', c: null}, { skipNulls: true });
-assert.equal(nullsSkipped, 'a=b');
-```
+- [Node.js PR: buffer: throw if both length and enc are passed](https://github.com/nodejs/node/pull/4514)
+- [Node Security Project disclosure for `ws`](https://nodesecurity.io/advisories/67)
+- [Node Security Project disclosure for`bittorrent-dht`](https://nodesecurity.io/advisories/68)
 
-If you're communicating with legacy systems, you can switch to `iso-8859-1` using the `charset` option:
 
-```javascript
-var iso = qs.stringify({ æ: 'æ' }, { charset: 'iso-8859-1' });
-assert.equal(iso, '%E6=%E6');
-```
+## credit
 
-Characters that don't exist in `iso-8859-1` will be converted to numeric entities, similar to what browsers do:
+The original issues in `bittorrent-dht`
+([disclosure](https://nodesecurity.io/advisories/68)) and
+`ws` ([disclosure](https://nodesecurity.io/advisories/67)) were discovered by
+[Mathias Buus](https://github.com/mafintosh) and
+[Feross Aboukhadijeh](http://feross.org/).
 
-```javascript
-var numeric = qs.stringify({ a: '☺' }, { charset: 'iso-8859-1' });
-assert.equal(numeric, 'a=%26%239786%3B');
-```
+Thanks to [Adam Baldwin](https://github.com/evilpacket) for helping disclose these issues
+and for his work running the [Node Security Project](https://nodesecurity.io/).
 
-You can use the `charsetSentinel` option to announce the character by including an `utf8=✓` parameter with the proper encoding if the checkmark, similar to what Ruby on Rails and others do when submitting forms.
+Thanks to [John Hiesey](https://github.com/jhiesey) for proofreading this README and
+auditing the code.
 
-```javascript
-var sentinel = qs.stringify({ a: '☺' }, { charsetSentinel: true });
-assert.equal(sentinel, 'utf8=%E2%9C%93&a=%E2%98%BA');
 
-var isoSentinel = qs.stringify({ a: 'æ' }, { charsetSentinel: true, charset: 'iso-8859-1' });
-assert.equal(isoSentinel, 'utf8=%26%2310003%3B&a=%E6');
-```
+## license
 
-### Dealing with special character sets
-
-By default the encoding and decoding of characters is done in `utf-8`, and `iso-8859-1` support is also built in via the `charset` parameter.
-
-If you wish to encode querystrings to a different character set (i.e.
-[Shift JIS](https://en.wikipedia.org/wiki/Shift_JIS)) you can use the
-[`qs-iconv`](https://github.com/martinheidegger/qs-iconv) library:
-
-```javascript
-var encoder = require('qs-iconv/encoder')('shift_jis');
-var shiftJISEncoded = qs.stringify({ a: 'こんにちは！' }, { encoder: encoder });
-assert.equal(shiftJISEncoded, 'a=%82%B1%82%F1%82%C9%82%BF%82%CD%81I');
-```
-
-This also works for decoding of query strings:
-
-```javascript
-var decoder = require('qs-iconv/decoder')('shift_jis');
-var obj = qs.parse('a=%82%B1%82%F1%82%C9%82%BF%82%CD%81I', { decoder: decoder });
-assert.deepEqual(obj, { a: 'こんにちは！' });
-```
-
-### RFC 3986 and RFC 1738 space encoding
-
-RFC3986 used as default option and encodes ' ' to *%20* which is backward compatible.
-In the same time, output can be stringified as per RFC1738 with ' ' equal to '+'.
-
-```
-assert.equal(qs.stringify({ a: 'b c' }), 'a=b%20c');
-assert.equal(qs.stringify({ a: 'b c' }, { format : 'RFC3986' }), 'a=b%20c');
-assert.equal(qs.stringify({ a: 'b c' }, { format : 'RFC1738' }), 'a=b+c');
-```
-
-## Security
-
-Please email [@ljharb](https://github.com/ljharb) or see https://tidelift.com/security if you have a potential security vulnerability to report.
-
-## qs for enterprise
-
-Available as part of the Tidelift Subscription
-
-The maintainers of qs and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications.
-Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use.
-[Learn more.](https://tidelift.com/subscription/pkg/npm-qs?utm_source=npm-qs&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-[package-url]: https://npmjs.org/package/qs
-[npm-version-svg]: https://versionbadg.es/ljharb/qs.svg
-[deps-svg]: https://david-dm.org/ljharb/qs.svg
-[deps-url]: https://david-dm.org/ljharb/qs
-[dev-deps-svg]: https://david-dm.org/ljharb/qs/dev-status.svg
-[dev-deps-url]: https://david-dm.org/ljharb/qs#info=devDependencies
-[npm-badge-png]: https://nodei.co/npm/qs.png?downloads=true&stars=true
-[license-image]: https://img.shields.io/npm/l/qs.svg
-[license-url]: LICENSE
-[downloads-image]: https://img.shields.io/npm/dm/qs.svg
-[downloads-url]: https://npm-stat.com/charts.html?package=qs
-[codecov-image]: https://codecov.io/gh/ljharb/qs/branch/main/graphs/badge.svg
-[codecov-url]: https://app.codecov.io/gh/ljharb/qs/
-[actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/ljharb/qs
-[actions-url]: https://github.com/ljharb/qs/actions
-
-## Acknowledgements
-
-qs logo by [NUMI](https://github.com/numi-hq/open-design):
-
-[<img src="https://raw.githubusercontent.com/numi-hq/open-design/main/assets/numi-lockup.png" alt="NUMI Logo" style="width: 200px;"/>](https://numi.tech/?ref=qs)
+MIT. Copyright (C) [Feross Aboukhadijeh](http://feross.org)
