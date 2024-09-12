@@ -1,136 +1,106 @@
-# statuses
+﻿# whatwg-url
 
-[![NPM Version][npm-version-image]][npm-url]
-[![NPM Downloads][npm-downloads-image]][npm-url]
-[![Node.js Version][node-version-image]][node-version-url]
-[![Build Status][ci-image]][ci-url]
-[![Test Coverage][coveralls-image]][coveralls-url]
+whatwg-url is a full implementation of the WHATWG [URL Standard](https://url.spec.whatwg.org/). It can be used standalone, but it also exposes a lot of the internal algorithms that are useful for integrating a URL parser into a project like [jsdom](https://github.com/jsdom/jsdom).
 
-HTTP status utility for node.
+## Specification conformance
 
-This module provides a list of status codes and messages sourced from
-a few different projects:
+whatwg-url is currently up to date with the URL spec up to commit [eee49fd](https://github.com/whatwg/url/commit/eee49fdf4f99d59f717cbeb0bce29fda930196d4).
 
-  * The [IANA Status Code Registry](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
-  * The [Node.js project](https://nodejs.org/)
-  * The [NGINX project](https://www.nginx.com/)
-  * The [Apache HTTP Server project](https://httpd.apache.org/)
+For `file:` URLs, whose [origin is left unspecified](https://url.spec.whatwg.org/#concept-url-origin), whatwg-url chooses to use a new opaque origin (which serializes to `"null"`).
 
-## Installation
-
-This is a [Node.js](https://nodejs.org/en/) module available through the
-[npm registry](https://www.npmjs.com/). Installation is done using the
-[`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
-
-```sh
-$ npm install statuses
-```
+whatwg-url does not yet implement any encoding handling beyond UTF-8. That is, the _encoding override_ parameter does not exist in our API.
 
 ## API
 
-<!-- eslint-disable no-unused-vars -->
+### The `URL` and `URLSearchParams` classes
 
-```js
-var status = require('statuses')
-```
+The main API is provided by the [`URL`](https://url.spec.whatwg.org/#url-class) and [`URLSearchParams`](https://url.spec.whatwg.org/#interface-urlsearchparams) exports, which follows the spec's behavior in all ways (including e.g. `USVString` conversion). Most consumers of this library will want to use these.
 
-### status(code)
+### Low-level URL Standard API
 
-Returns the status message string for a known HTTP status code. The code
-may be a number or a string. An error is thrown for an unknown status code.
+The following methods are exported for use by places like jsdom that need to implement things like [`HTMLHyperlinkElementUtils`](https://html.spec.whatwg.org/#htmlhyperlinkelementutils). They mostly operate on or return an "internal URL" or ["URL record"](https://url.spec.whatwg.org/#concept-url) type.
 
-<!-- eslint-disable no-undef -->
+- [URL parser](https://url.spec.whatwg.org/#concept-url-parser): `parseURL(input, { baseURL })`
+- [Basic URL parser](https://url.spec.whatwg.org/#concept-basic-url-parser): `basicURLParse(input, { baseURL, url, stateOverride })`
+- [URL serializer](https://url.spec.whatwg.org/#concept-url-serializer): `serializeURL(urlRecord, excludeFragment)`
+- [Host serializer](https://url.spec.whatwg.org/#concept-host-serializer): `serializeHost(hostFromURLRecord)`
+- [URL path serializer](https://url.spec.whatwg.org/#url-path-serializer): `serializePath(urlRecord)`
+- [Serialize an integer](https://url.spec.whatwg.org/#serialize-an-integer): `serializeInteger(number)`
+- [Origin](https://url.spec.whatwg.org/#concept-url-origin) [serializer](https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin): `serializeURLOrigin(urlRecord)`
+- [Set the username](https://url.spec.whatwg.org/#set-the-username): `setTheUsername(urlRecord, usernameString)`
+- [Set the password](https://url.spec.whatwg.org/#set-the-password): `setThePassword(urlRecord, passwordString)`
+- [Has an opaque path](https://url.spec.whatwg.org/#url-opaque-path): `hasAnOpaquePath(urlRecord)`
+- [Cannot have a username/password/port](https://url.spec.whatwg.org/#cannot-have-a-username-password-port): `cannotHaveAUsernamePasswordPort(urlRecord)`
+- [Percent decode bytes](https://url.spec.whatwg.org/#percent-decode): `percentDecodeBytes(uint8Array)`
+- [Percent decode a string](https://url.spec.whatwg.org/#percent-decode-string): `percentDecodeString(string)`
 
-```js
-status(403) // => 'Forbidden'
-status('403') // => 'Forbidden'
-status(306) // throws
-```
+The `stateOverride` parameter is one of the following strings:
 
-### status(msg)
+- [`"scheme start"`](https://url.spec.whatwg.org/#scheme-start-state)
+- [`"scheme"`](https://url.spec.whatwg.org/#scheme-state)
+- [`"no scheme"`](https://url.spec.whatwg.org/#no-scheme-state)
+- [`"special relative or authority"`](https://url.spec.whatwg.org/#special-relative-or-authority-state)
+- [`"path or authority"`](https://url.spec.whatwg.org/#path-or-authority-state)
+- [`"relative"`](https://url.spec.whatwg.org/#relative-state)
+- [`"relative slash"`](https://url.spec.whatwg.org/#relative-slash-state)
+- [`"special authority slashes"`](https://url.spec.whatwg.org/#special-authority-slashes-state)
+- [`"special authority ignore slashes"`](https://url.spec.whatwg.org/#special-authority-ignore-slashes-state)
+- [`"authority"`](https://url.spec.whatwg.org/#authority-state)
+- [`"host"`](https://url.spec.whatwg.org/#host-state)
+- [`"hostname"`](https://url.spec.whatwg.org/#hostname-state)
+- [`"port"`](https://url.spec.whatwg.org/#port-state)
+- [`"file"`](https://url.spec.whatwg.org/#file-state)
+- [`"file slash"`](https://url.spec.whatwg.org/#file-slash-state)
+- [`"file host"`](https://url.spec.whatwg.org/#file-host-state)
+- [`"path start"`](https://url.spec.whatwg.org/#path-start-state)
+- [`"path"`](https://url.spec.whatwg.org/#path-state)
+- [`"opaque path"`](https://url.spec.whatwg.org/#cannot-be-a-base-url-path-state)
+- [`"query"`](https://url.spec.whatwg.org/#query-state)
+- [`"fragment"`](https://url.spec.whatwg.org/#fragment-state)
 
-Returns the numeric status code for a known HTTP status message. The message
-is case-insensitive. An error is thrown for an unknown status message.
+The URL record type has the following API:
 
-<!-- eslint-disable no-undef -->
+- [`scheme`](https://url.spec.whatwg.org/#concept-url-scheme)
+- [`username`](https://url.spec.whatwg.org/#concept-url-username)
+- [`password`](https://url.spec.whatwg.org/#concept-url-password)
+- [`host`](https://url.spec.whatwg.org/#concept-url-host)
+- [`port`](https://url.spec.whatwg.org/#concept-url-port)
+- [`path`](https://url.spec.whatwg.org/#concept-url-path) (as an array of strings, or a string)
+- [`query`](https://url.spec.whatwg.org/#concept-url-query)
+- [`fragment`](https://url.spec.whatwg.org/#concept-url-fragment)
 
-```js
-status('forbidden') // => 403
-status('Forbidden') // => 403
-status('foo') // throws
-```
+These properties should be treated with care, as in general changing them will cause the URL record to be in an inconsistent state until the appropriate invocation of `basicURLParse` is used to fix it up. You can see examples of this in the URL Standard, where there are many step sequences like "4. Set context object’s url’s fragment to the empty string. 5. Basic URL parse _input_ with context object’s url as _url_ and fragment state as _state override_." In between those two steps, a URL record is in an unusable state.
 
-### status.codes
+The return value of "failure" in the spec is represented by `null`. That is, functions like `parseURL` and `basicURLParse` can return _either_ a URL record _or_ `null`.
 
-Returns an array of all the status codes as `Integer`s.
+### `whatwg-url/webidl2js-wrapper` module
 
-### status.code[msg]
+This module exports the `URL` and `URLSearchParams` [interface wrappers API](https://github.com/jsdom/webidl2js#for-interfaces) generated by [webidl2js](https://github.com/jsdom/webidl2js).
 
-Returns the numeric status code for a known status message (in lower-case),
-otherwise `undefined`.
+## Development instructions
 
-<!-- eslint-disable no-undef, no-unused-expressions -->
+First, install [Node.js](https://nodejs.org/). Then, fetch the dependencies of whatwg-url, by running from this directory:
 
-```js
-status['not found'] // => 404
-```
+    npm install
 
-### status.empty[code]
+To run tests:
 
-Returns `true` if a status code expects an empty body.
+    npm test
 
-<!-- eslint-disable no-undef, no-unused-expressions -->
+To generate a coverage report:
 
-```js
-status.empty[200] // => undefined
-status.empty[204] // => true
-status.empty[304] // => true
-```
+    npm run coverage
 
-### status.message[code]
+To build and run the live viewer:
 
-Returns the string message for a known numeric status code, otherwise
-`undefined`. This object is the same format as the
-[Node.js http module `http.STATUS_CODES`](https://nodejs.org/dist/latest/docs/api/http.html#http_http_status_codes).
+    npm run prepare
+    npm run build-live-viewer
 
-<!-- eslint-disable no-undef, no-unused-expressions -->
+Serve the contents of the `live-viewer` directory using any web server.
 
-```js
-status.message[404] // => 'Not Found'
-```
+## Supporting whatwg-url
 
-### status.redirect[code]
+The jsdom project (including whatwg-url) is a community-driven project maintained by a team of [volunteers](https://github.com/orgs/jsdom/people). You could support us by:
 
-Returns `true` if a status code is a valid redirect status.
-
-<!-- eslint-disable no-undef, no-unused-expressions -->
-
-```js
-status.redirect[200] // => undefined
-status.redirect[301] // => true
-```
-
-### status.retry[code]
-
-Returns `true` if you should retry the rest.
-
-<!-- eslint-disable no-undef, no-unused-expressions -->
-
-```js
-status.retry[501] // => undefined
-status.retry[503] // => true
-```
-
-## License
-
-[MIT](LICENSE)
-
-[ci-image]: https://badgen.net/github/checks/jshttp/statuses/master?label=ci
-[ci-url]: https://github.com/jshttp/statuses/actions?query=workflow%3Aci
-[coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/statuses/master
-[coveralls-url]: https://coveralls.io/r/jshttp/statuses?branch=master
-[node-version-image]: https://badgen.net/npm/node/statuses
-[node-version-url]: https://nodejs.org/en/download
-[npm-downloads-image]: https://badgen.net/npm/dm/statuses
-[npm-url]: https://npmjs.org/package/statuses
-[npm-version-image]: https://badgen.net/npm/v/statuses
+- [Getting professional support for whatwg-url](https://tidelift.com/subscription/pkg/npm-whatwg-url?utm_source=npm-whatwg-url&utm_medium=referral&utm_campaign=readme) as part of a Tidelift subscription. Tidelift helps making open source sustainable for us while giving teams assurances for maintenance, licensing, and security.
+- Contributing directly to the project.
