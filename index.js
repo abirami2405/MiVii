@@ -1,65 +1,24 @@
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-/* eslint-disable node/no-deprecated-api */
-var buffer = require('buffer')
-var Buffer = buffer.Buffer
+'use strict'
+/* eslint-env mocha */
+/* eslint no-proto: 0 */
+var assert = require('assert')
+var setPrototypeOf = require('..')
 
-// alternative to using Object.keys for old browsers
-function copyProps (src, dst) {
-  for (var key in src) {
-    dst[key] = src[key]
-  }
-}
-if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
-  module.exports = buffer
-} else {
-  // Copy properties from require('buffer')
-  copyProps(buffer, exports)
-  exports.Buffer = SafeBuffer
-}
+describe('setProtoOf(obj, proto)', function () {
+  it('should merge objects', function () {
+    var obj = { a: 1, b: 2 }
+    var proto = { b: 3, c: 4 }
+    var mergeObj = setPrototypeOf(obj, proto)
 
-function SafeBuffer (arg, encodingOrOffset, length) {
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
-
-// Copy static methods from Buffer
-copyProps(Buffer, SafeBuffer)
-
-SafeBuffer.from = function (arg, encodingOrOffset, length) {
-  if (typeof arg === 'number') {
-    throw new TypeError('Argument must not be a number')
-  }
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.alloc = function (size, fill, encoding) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  var buf = Buffer(size)
-  if (fill !== undefined) {
-    if (typeof encoding === 'string') {
-      buf.fill(fill, encoding)
+    if (Object.getPrototypeOf) {
+      assert.strictEqual(Object.getPrototypeOf(obj), proto)
+    } else if ({ __proto__: [] } instanceof Array) {
+      assert.strictEqual(obj.__proto__, proto)
     } else {
-      buf.fill(fill)
+      assert.strictEqual(obj.a, 1)
+      assert.strictEqual(obj.b, 2)
+      assert.strictEqual(obj.c, 4)
     }
-  } else {
-    buf.fill(0)
-  }
-  return buf
-}
-
-SafeBuffer.allocUnsafe = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return Buffer(size)
-}
-
-SafeBuffer.allocUnsafeSlow = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return buffer.SlowBuffer(size)
-}
+    assert.strictEqual(mergeObj, obj)
+  })
+})
