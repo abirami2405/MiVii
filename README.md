@@ -1,106 +1,375 @@
-﻿# whatwg-url
+# Mongoose
 
-whatwg-url is a full implementation of the WHATWG [URL Standard](https://url.spec.whatwg.org/). It can be used standalone, but it also exposes a lot of the internal algorithms that are useful for integrating a URL parser into a project like [jsdom](https://github.com/jsdom/jsdom).
+Mongoose is a [MongoDB](https://www.mongodb.org/) object modeling tool designed to work in an asynchronous environment. Mongoose supports [Node.js](https://nodejs.org/en/) and [Deno](https://deno.land/) (alpha).
 
-## Specification conformance
+[![Build Status](https://github.com/Automattic/mongoose/workflows/Test/badge.svg)](https://github.com/Automattic/mongoose)
+[![NPM version](https://badge.fury.io/js/mongoose.svg)](http://badge.fury.io/js/mongoose)
+[![Deno version](https://deno.land/badge/mongoose/version)](https://deno.land/x/mongoose)
+[![Deno popularity](https://deno.land/badge/mongoose/popularity)](https://deno.land/x/mongoose)
 
-whatwg-url is currently up to date with the URL spec up to commit [eee49fd](https://github.com/whatwg/url/commit/eee49fdf4f99d59f717cbeb0bce29fda930196d4).
+[![npm](https://nodei.co/npm/mongoose.png)](https://www.npmjs.com/package/mongoose)
 
-For `file:` URLs, whose [origin is left unspecified](https://url.spec.whatwg.org/#concept-url-origin), whatwg-url chooses to use a new opaque origin (which serializes to `"null"`).
+## Documentation
 
-whatwg-url does not yet implement any encoding handling beyond UTF-8. That is, the _encoding override_ parameter does not exist in our API.
+The official documentation website is [mongoosejs.com](http://mongoosejs.com/).
 
-## API
+Mongoose 8.0.0 was released on October 31, 2023. You can find more details on [backwards breaking changes in 8.0.0 on our docs site](https://mongoosejs.com/docs/migrating_to_8.html).
 
-### The `URL` and `URLSearchParams` classes
+## Support
 
-The main API is provided by the [`URL`](https://url.spec.whatwg.org/#url-class) and [`URLSearchParams`](https://url.spec.whatwg.org/#interface-urlsearchparams) exports, which follows the spec's behavior in all ways (including e.g. `USVString` conversion). Most consumers of this library will want to use these.
+* [Stack Overflow](http://stackoverflow.com/questions/tagged/mongoose)
+* [Bug Reports](https://github.com/Automattic/mongoose/issues/)
+* [Mongoose Slack Channel](http://slack.mongoosejs.io/)
+* [Help Forum](http://groups.google.com/group/mongoose-orm)
+* [MongoDB Support](https://www.mongodb.com/docs/manual/support/)
 
-### Low-level URL Standard API
+## Plugins
 
-The following methods are exported for use by places like jsdom that need to implement things like [`HTMLHyperlinkElementUtils`](https://html.spec.whatwg.org/#htmlhyperlinkelementutils). They mostly operate on or return an "internal URL" or ["URL record"](https://url.spec.whatwg.org/#concept-url) type.
+Check out the [plugins search site](http://plugins.mongoosejs.io/) to see hundreds of related modules from the community. Next, learn how to write your own plugin from the [docs](http://mongoosejs.com/docs/plugins.html) or [this blog post](http://thecodebarbarian.com/2015/03/06/guide-to-mongoose-plugins).
 
-- [URL parser](https://url.spec.whatwg.org/#concept-url-parser): `parseURL(input, { baseURL })`
-- [Basic URL parser](https://url.spec.whatwg.org/#concept-basic-url-parser): `basicURLParse(input, { baseURL, url, stateOverride })`
-- [URL serializer](https://url.spec.whatwg.org/#concept-url-serializer): `serializeURL(urlRecord, excludeFragment)`
-- [Host serializer](https://url.spec.whatwg.org/#concept-host-serializer): `serializeHost(hostFromURLRecord)`
-- [URL path serializer](https://url.spec.whatwg.org/#url-path-serializer): `serializePath(urlRecord)`
-- [Serialize an integer](https://url.spec.whatwg.org/#serialize-an-integer): `serializeInteger(number)`
-- [Origin](https://url.spec.whatwg.org/#concept-url-origin) [serializer](https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin): `serializeURLOrigin(urlRecord)`
-- [Set the username](https://url.spec.whatwg.org/#set-the-username): `setTheUsername(urlRecord, usernameString)`
-- [Set the password](https://url.spec.whatwg.org/#set-the-password): `setThePassword(urlRecord, passwordString)`
-- [Has an opaque path](https://url.spec.whatwg.org/#url-opaque-path): `hasAnOpaquePath(urlRecord)`
-- [Cannot have a username/password/port](https://url.spec.whatwg.org/#cannot-have-a-username-password-port): `cannotHaveAUsernamePasswordPort(urlRecord)`
-- [Percent decode bytes](https://url.spec.whatwg.org/#percent-decode): `percentDecodeBytes(uint8Array)`
-- [Percent decode a string](https://url.spec.whatwg.org/#percent-decode-string): `percentDecodeString(string)`
+## Contributors
 
-The `stateOverride` parameter is one of the following strings:
+Pull requests are always welcome! Please base pull requests against the `master`
+branch and follow the [contributing guide](https://github.com/Automattic/mongoose/blob/master/CONTRIBUTING.md).
 
-- [`"scheme start"`](https://url.spec.whatwg.org/#scheme-start-state)
-- [`"scheme"`](https://url.spec.whatwg.org/#scheme-state)
-- [`"no scheme"`](https://url.spec.whatwg.org/#no-scheme-state)
-- [`"special relative or authority"`](https://url.spec.whatwg.org/#special-relative-or-authority-state)
-- [`"path or authority"`](https://url.spec.whatwg.org/#path-or-authority-state)
-- [`"relative"`](https://url.spec.whatwg.org/#relative-state)
-- [`"relative slash"`](https://url.spec.whatwg.org/#relative-slash-state)
-- [`"special authority slashes"`](https://url.spec.whatwg.org/#special-authority-slashes-state)
-- [`"special authority ignore slashes"`](https://url.spec.whatwg.org/#special-authority-ignore-slashes-state)
-- [`"authority"`](https://url.spec.whatwg.org/#authority-state)
-- [`"host"`](https://url.spec.whatwg.org/#host-state)
-- [`"hostname"`](https://url.spec.whatwg.org/#hostname-state)
-- [`"port"`](https://url.spec.whatwg.org/#port-state)
-- [`"file"`](https://url.spec.whatwg.org/#file-state)
-- [`"file slash"`](https://url.spec.whatwg.org/#file-slash-state)
-- [`"file host"`](https://url.spec.whatwg.org/#file-host-state)
-- [`"path start"`](https://url.spec.whatwg.org/#path-start-state)
-- [`"path"`](https://url.spec.whatwg.org/#path-state)
-- [`"opaque path"`](https://url.spec.whatwg.org/#cannot-be-a-base-url-path-state)
-- [`"query"`](https://url.spec.whatwg.org/#query-state)
-- [`"fragment"`](https://url.spec.whatwg.org/#fragment-state)
+If your pull requests makes documentation changes, please do **not**
+modify any `.html` files. The `.html` files are compiled code, so please make
+your changes in `docs/*.pug`, `lib/*.js`, or `test/docs/*.js`.
 
-The URL record type has the following API:
+View all 400+ [contributors](https://github.com/Automattic/mongoose/graphs/contributors).
 
-- [`scheme`](https://url.spec.whatwg.org/#concept-url-scheme)
-- [`username`](https://url.spec.whatwg.org/#concept-url-username)
-- [`password`](https://url.spec.whatwg.org/#concept-url-password)
-- [`host`](https://url.spec.whatwg.org/#concept-url-host)
-- [`port`](https://url.spec.whatwg.org/#concept-url-port)
-- [`path`](https://url.spec.whatwg.org/#concept-url-path) (as an array of strings, or a string)
-- [`query`](https://url.spec.whatwg.org/#concept-url-query)
-- [`fragment`](https://url.spec.whatwg.org/#concept-url-fragment)
+## Installation
 
-These properties should be treated with care, as in general changing them will cause the URL record to be in an inconsistent state until the appropriate invocation of `basicURLParse` is used to fix it up. You can see examples of this in the URL Standard, where there are many step sequences like "4. Set context object’s url’s fragment to the empty string. 5. Basic URL parse _input_ with context object’s url as _url_ and fragment state as _state override_." In between those two steps, a URL record is in an unusable state.
+First install [Node.js](http://nodejs.org/) and [MongoDB](https://www.mongodb.org/downloads). Then:
 
-The return value of "failure" in the spec is represented by `null`. That is, functions like `parseURL` and `basicURLParse` can return _either_ a URL record _or_ `null`.
+```sh
+npm install mongoose
+```
 
-### `whatwg-url/webidl2js-wrapper` module
+Mongoose 6.8.0 also includes alpha support for [Deno](https://deno.land/).
 
-This module exports the `URL` and `URLSearchParams` [interface wrappers API](https://github.com/jsdom/webidl2js#for-interfaces) generated by [webidl2js](https://github.com/jsdom/webidl2js).
+## Importing
 
-## Development instructions
+```javascript
+// Using Node.js `require()`
+const mongoose = require('mongoose');
 
-First, install [Node.js](https://nodejs.org/). Then, fetch the dependencies of whatwg-url, by running from this directory:
+// Using ES6 imports
+import mongoose from 'mongoose';
+```
 
-    npm install
+Or, using [Deno's `createRequire()` for CommonJS support](https://deno.land/std@0.113.0/node/README.md?source=#commonjs-modules-loading) as follows.
 
-To run tests:
+```javascript
+import { createRequire } from 'https://deno.land/std@0.177.0/node/module.ts';
+const require = createRequire(import.meta.url);
 
-    npm test
+const mongoose = require('mongoose');
 
-To generate a coverage report:
+mongoose.connect('mongodb://127.0.0.1:27017/test')
+  .then(() => console.log('Connected!'));
+```
 
-    npm run coverage
+You can then run the above script using the following.
 
-To build and run the live viewer:
+```sh
+deno run --allow-net --allow-read --allow-sys --allow-env mongoose-test.js
+```
 
-    npm run prepare
-    npm run build-live-viewer
+## Mongoose for Enterprise
 
-Serve the contents of the `live-viewer` directory using any web server.
+Available as part of the Tidelift Subscription
 
-## Supporting whatwg-url
+The maintainers of mongoose and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-mongoose?utm_source=npm-mongoose&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
 
-The jsdom project (including whatwg-url) is a community-driven project maintained by a team of [volunteers](https://github.com/orgs/jsdom/people). You could support us by:
+## Overview
 
-- [Getting professional support for whatwg-url](https://tidelift.com/subscription/pkg/npm-whatwg-url?utm_source=npm-whatwg-url&utm_medium=referral&utm_campaign=readme) as part of a Tidelift subscription. Tidelift helps making open source sustainable for us while giving teams assurances for maintenance, licensing, and security.
-- Contributing directly to the project.
+### Connecting to MongoDB
+
+First, we need to define a connection. If your app uses only one database, you should use `mongoose.connect`. If you need to create additional connections, use `mongoose.createConnection`.
+
+Both `connect` and `createConnection` take a `mongodb://` URI, or the parameters `host, database, port, options`.
+
+```js
+await mongoose.connect('mongodb://127.0.0.1/my_database');
+```
+
+Once connected, the `open` event is fired on the `Connection` instance. If you're using `mongoose.connect`, the `Connection` is `mongoose.connection`. Otherwise, `mongoose.createConnection` return value is a `Connection`.
+
+**Note:** *If the local connection fails then try using 127.0.0.1 instead of localhost. Sometimes issues may arise when the local hostname has been changed.*
+
+**Important!** Mongoose buffers all the commands until it's connected to the database. This means that you don't have to wait until it connects to MongoDB in order to define models, run queries, etc.
+
+### Defining a Model
+
+Models are defined through the `Schema` interface.
+
+```js
+const Schema = mongoose.Schema;
+const ObjectId = Schema.ObjectId;
+
+const BlogPost = new Schema({
+  author: ObjectId,
+  title: String,
+  body: String,
+  date: Date
+});
+```
+
+Aside from defining the structure of your documents and the types of data you're storing, a Schema handles the definition of:
+
+* [Validators](http://mongoosejs.com/docs/validation.html) (async and sync)
+* [Defaults](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-default)
+* [Getters](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-get)
+* [Setters](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-set)
+* [Indexes](http://mongoosejs.com/docs/guide.html#indexes)
+* [Middleware](http://mongoosejs.com/docs/middleware.html)
+* [Methods](http://mongoosejs.com/docs/guide.html#methods) definition
+* [Statics](http://mongoosejs.com/docs/guide.html#statics) definition
+* [Plugins](http://mongoosejs.com/docs/plugins.html)
+* [pseudo-JOINs](http://mongoosejs.com/docs/populate.html)
+
+The following example shows some of these features:
+
+```js
+const Comment = new Schema({
+  name: { type: String, default: 'hahaha' },
+  age: { type: Number, min: 18, index: true },
+  bio: { type: String, match: /[a-z]/ },
+  date: { type: Date, default: Date.now },
+  buff: Buffer
+});
+
+// a setter
+Comment.path('name').set(function(v) {
+  return capitalize(v);
+});
+
+// middleware
+Comment.pre('save', function(next) {
+  notify(this.get('email'));
+  next();
+});
+```
+
+Take a look at the example in [`examples/schema/schema.js`](https://github.com/Automattic/mongoose/blob/master/examples/schema/schema.js) for an end-to-end example of a typical setup.
+
+### Accessing a Model
+
+Once we define a model through `mongoose.model('ModelName', mySchema)`, we can access it through the same function
+
+```js
+const MyModel = mongoose.model('ModelName');
+```
+
+Or just do it all at once
+
+```js
+const MyModel = mongoose.model('ModelName', mySchema);
+```
+
+The first argument is the *singular* name of the collection your model is for. **Mongoose automatically looks for the *plural* version of your model name.** For example, if you use
+
+```js
+const MyModel = mongoose.model('Ticket', mySchema);
+```
+
+Then `MyModel` will use the **tickets** collection, not the **ticket** collection. For more details read the [model docs](https://mongoosejs.com/docs/api/mongoose.html#mongoose_Mongoose-model).
+
+Once we have our model, we can then instantiate it, and save it:
+
+```js
+const instance = new MyModel();
+instance.my.key = 'hello';
+await instance.save();
+```
+
+Or we can find documents from the same collection
+
+```js
+await MyModel.find({});
+```
+
+You can also `findOne`, `findById`, `update`, etc.
+
+```js
+const instance = await MyModel.findOne({ /* ... */ });
+console.log(instance.my.key); // 'hello'
+```
+
+For more details check out [the docs](http://mongoosejs.com/docs/queries.html).
+
+**Important!** If you opened a separate connection using `mongoose.createConnection()` but attempt to access the model through `mongoose.model('ModelName')` it will not work as expected since it is not hooked up to an active db connection. In this case access your model through the connection you created:
+
+```js
+const conn = mongoose.createConnection('your connection string');
+const MyModel = conn.model('ModelName', schema);
+const m = new MyModel();
+await m.save(); // works
+```
+
+vs
+
+```js
+const conn = mongoose.createConnection('your connection string');
+const MyModel = mongoose.model('ModelName', schema);
+const m = new MyModel();
+await m.save(); // does not work b/c the default connection object was never connected
+```
+
+### Embedded Documents
+
+In the first example snippet, we defined a key in the Schema that looks like:
+
+```txt
+comments: [Comment]
+```
+
+Where `Comment` is a `Schema` we created. This means that creating embedded documents is as simple as:
+
+```js
+// retrieve my model
+const BlogPost = mongoose.model('BlogPost');
+
+// create a blog post
+const post = new BlogPost();
+
+// create a comment
+post.comments.push({ title: 'My comment' });
+
+await post.save();
+```
+
+The same goes for removing them:
+
+```js
+const post = await BlogPost.findById(myId);
+post.comments[0].deleteOne();
+await post.save();
+```
+
+Embedded documents enjoy all the same features as your models. Defaults, validators, middleware.
+
+### Middleware
+
+See the [docs](http://mongoosejs.com/docs/middleware.html) page.
+
+#### Intercepting and mutating method arguments
+
+You can intercept method arguments via middleware.
+
+For example, this would allow you to broadcast changes about your Documents every time someone `set`s a path in your Document to a new value:
+
+```js
+schema.pre('set', function(next, path, val, typel) {
+  // `this` is the current Document
+  this.emit('set', path, val);
+
+  // Pass control to the next pre
+  next();
+});
+```
+
+Moreover, you can mutate the incoming `method` arguments so that subsequent middleware see different values for those arguments. To do so, just pass the new values to `next`:
+
+```js
+schema.pre(method, function firstPre(next, methodArg1, methodArg2) {
+  // Mutate methodArg1
+  next('altered-' + methodArg1.toString(), methodArg2);
+});
+
+// pre declaration is chainable
+schema.pre(method, function secondPre(next, methodArg1, methodArg2) {
+  console.log(methodArg1);
+  // => 'altered-originalValOfMethodArg1'
+
+  console.log(methodArg2);
+  // => 'originalValOfMethodArg2'
+
+  // Passing no arguments to `next` automatically passes along the current argument values
+  // i.e., the following `next()` is equivalent to `next(methodArg1, methodArg2)`
+  // and also equivalent to, with the example method arg
+  // values, `next('altered-originalValOfMethodArg1', 'originalValOfMethodArg2')`
+  next();
+});
+```
+
+#### Schema gotcha
+
+`type`, when used in a schema has special meaning within Mongoose. If your schema requires using `type` as a nested property you must use object notation:
+
+```js
+new Schema({
+  broken: { type: Boolean },
+  asset: {
+    name: String,
+    type: String // uh oh, it broke. asset will be interpreted as String
+  }
+});
+
+new Schema({
+  works: { type: Boolean },
+  asset: {
+    name: String,
+    type: { type: String } // works. asset is an object with a type property
+  }
+});
+```
+
+### Driver Access
+
+Mongoose is built on top of the [official MongoDB Node.js driver](https://github.com/mongodb/node-mongodb-native). Each mongoose model keeps a reference to a [native MongoDB driver collection](http://mongodb.github.io/node-mongodb-native/2.1/api/Collection.html). The collection object can be accessed using `YourModel.collection`. However, using the collection object directly bypasses all mongoose features, including hooks, validation, etc. The one
+notable exception that `YourModel.collection` still buffers
+commands. As such, `YourModel.collection.find()` will **not**
+return a cursor.
+
+## API Docs
+
+Find the API docs [here](http://mongoosejs.com/docs/api/mongoose.html), generated using [dox](https://github.com/tj/dox)
+and [acquit](https://github.com/vkarpov15/acquit).
+
+## Related Projects
+
+### MongoDB Runners
+
+* [run-rs](https://www.npmjs.com/package/run-rs)
+* [mongodb-memory-server](https://www.npmjs.com/package/mongodb-memory-server)
+* [mongodb-topology-manager](https://www.npmjs.com/package/mongodb-topology-manager)
+
+### Unofficial CLIs
+
+* [mongoosejs-cli](https://www.npmjs.com/package/mongoosejs-cli)
+
+### Data Seeding
+
+* [dookie](https://www.npmjs.com/package/dookie)
+* [seedgoose](https://www.npmjs.com/package/seedgoose)
+* [mongoose-data-seed](https://www.npmjs.com/package/mongoose-data-seed)
+
+### Express Session Stores
+
+* [connect-mongodb-session](https://www.npmjs.com/package/connect-mongodb-session)
+* [connect-mongo](https://www.npmjs.com/package/connect-mongo)
+
+## License
+
+Copyright (c) 2010 LearnBoost &lt;dev@learnboost.com&gt;
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
